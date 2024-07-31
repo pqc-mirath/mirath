@@ -1,8 +1,14 @@
 *.swp
 
-build/
 bin/
 doc/html/
 tmp/
+build/
+cmake-build-debug/
+cmake-build-release/
+
+*.json/
+.cache/
+.idea/
 
 PQCsignKAT*
