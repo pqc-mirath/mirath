@@ -4,12 +4,10 @@
 
 #include <stdint.h>
 #include "fips202.h"
-#include "../params.h"
+#include "../mirath_parameters.h"
 #include "hash.h"
 
 typedef keccak_state mirath_prng_t;
-
-typedef Keccak_HashInstance prng_t;
 
 /* Initialize 'prng' from 'salt' and 'seed'.
  * If 'salt == NULL' then 'salt' is ignored.
