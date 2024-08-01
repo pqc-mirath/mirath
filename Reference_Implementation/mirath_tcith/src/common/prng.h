@@ -9,6 +9,8 @@
 
 typedef keccak_state mirath_prng_t;
 
+typedef Keccak_HashInstance prng_t;
+
 /* Initialize 'prng' from 'salt' and 'seed'.
  * If 'salt == NULL' then 'salt' is ignored.
  * If 'seed == NULL' then 'seed' is ignored. */
