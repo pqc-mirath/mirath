@@ -18,7 +18,7 @@ void hash_init(hash_ctx_t *ctx);
 void hash_update(hash_ctx_t ctx, const uint8_t *data, size_t length);
 
 /* Finalize the hashing, write the digest over 'hash'. */
-void hash_finalize(hash_ctx_t ctx, hash_t hash);
+void hash_finalize(hash_t hash, hash_ctx_t ctx);
 
 /* Return 'True' if 'hash1' and 'hash2' are equal, and 'False' otherwise. */
 int hash_equal(hash_t hash1, hash_t hash2);

@@ -23,7 +23,7 @@ void hash_update(hash_ctx_t ctx, const uint8_t *data, size_t length)
     Keccak_HashUpdate(ctx, data, length*8);
 }
 
-void hash_finalize(hash_ctx_t ctx, hash_t hash)
+void hash_finalize(hash_t hash, hash_ctx_t ctx)
 {
     Keccak_HashFinal(ctx, hash);
     free(ctx);
