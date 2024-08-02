@@ -31,7 +31,7 @@ void hash_finalize(hash_ctx_t ctx, hash_t hash)
 
 int hash_equal(hash_t hash1, hash_t hash2)
 {
-    return memcmp(hash1, hash2, HASH_SIZE) == 0;
+    return memcmp(hash1, hash2, 2 * MIRATH_SECURITY_BYTES) == 0;
 }
 
 void hash_digest0(hash_t hash, const hash_t salt, uint32_t l, uint32_t i, const seed_t seed) {

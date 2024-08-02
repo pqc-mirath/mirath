@@ -4,7 +4,9 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "mirath_tree.h"
+#include "common/hash.h"
 
 
 /**
@@ -88,7 +90,7 @@ void mirath_tree_clear(mirath_tree_t *tree) {
 void mirath_tree_prg(mirath_tree_t *tree, const uint8_t *salt, uint8_t e) {
     uint8_t domain_separator = DOMAIN_SEPARATOR_TREE;
     uint8_t digest[2 * MIRATH_SECURITY_BYTES];
-    hash_sha3_ctx ctx;
+    hash_ctx_t ctx;
 
     // We only need to calculate children of non-leaf nodes
     size_t non_leaf_nodes = mirath_tree_get_parent(MIRATH_PARAM_TREE_NODES - 1);
@@ -101,12 +103,12 @@ void mirath_tree_prg(mirath_tree_t *tree, const uint8_t *salt, uint8_t e) {
         size_t from = i;
         size_t to = i * 2 + 1;
 
-        hash_sha3_init(&ctx);
-        hash_sha3_absorb(&ctx, &domain_separator, sizeof(uint8_t));
-        hash_sha3_absorb(&ctx, salt, 2 * MIRATH_SECURITY_BYTES);
-        hash_sha3_absorb(&ctx, &e, sizeof(uint8_t));
-        hash_sha3_absorb(&ctx, tree->nodes[from], MIRATH_SECURITY_BYTES);
-        hash_sha3_finalize(digest, &ctx);
+        hash_init(&ctx);
+        hash_update(&ctx, &domain_separator, sizeof(uint8_t));
+        hash_update(&ctx, salt, 2 * MIRATH_SECURITY_BYTES);
+        hash_update(&ctx, &e, sizeof(uint8_t));
+        hash_update(&ctx, tree->nodes[from], MIRATH_SECURITY_BYTES);
+        hash_finalize(digest, ctx);
 
         if (!tree->nonempty[to]) {
             // left child
