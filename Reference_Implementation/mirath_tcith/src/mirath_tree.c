@@ -105,9 +105,9 @@ void mirath_tree_prg(mirath_tree_t *tree, const uint8_t *salt, uint8_t e) {
 
         hash_init(&ctx);
         hash_update(&ctx, &domain_separator, sizeof(uint8_t));
-        hash_update(&ctx, salt, 2 * MIRATH_SECURITY_BYTES);
-        hash_update(&ctx, &e, sizeof(uint8_t));
-        hash_update(&ctx, tree->nodes[from], MIRATH_SECURITY_BYTES);
+        hash_update(ctx, salt, 2 * MIRATH_SECURITY_BYTES);
+        hash_update(ctx, &e, sizeof(uint8_t));
+        hash_update(ctx, tree->nodes[from], MIRATH_SECURITY_BYTES);
         hash_finalize(digest, ctx);
 
         if (!tree->nonempty[to]) {
