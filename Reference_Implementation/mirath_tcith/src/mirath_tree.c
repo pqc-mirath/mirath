@@ -90,7 +90,6 @@ void mirath_tree_clear(mirath_tree_t *tree) {
 void mirath_tree_prg(mirath_tree_t *tree, const uint8_t *salt, uint8_t e) {
     uint8_t domain_separator = DOMAIN_SEPARATOR_TREE;
     uint8_t digest[2 * MIRATH_SECURITY_BYTES];
-    hash_ctx_t ctx;
 
     // We only need to calculate children of non-leaf nodes
     size_t non_leaf_nodes = mirath_tree_get_parent(MIRATH_PARAM_TREE_NODES - 1);
@@ -103,12 +102,7 @@ void mirath_tree_prg(mirath_tree_t *tree, const uint8_t *salt, uint8_t e) {
         size_t from = i;
         size_t to = i * 2 + 1;
 
-        hash_init(&ctx);
-        hash_update(&ctx, &domain_separator, sizeof(uint8_t));
-        hash_update(ctx, salt, 2 * MIRATH_SECURITY_BYTES);
-        hash_update(ctx, &e, sizeof(uint8_t));
-        hash_update(ctx, tree->nodes[from], MIRATH_SECURITY_BYTES);
-        hash_finalize(digest, ctx);
+        hash_tree_digest(digest, &domain_separator, salt, &e, tree->nodes[from]);
 
         if (!tree->nonempty[to]) {
             // left child
@@ -214,7 +208,7 @@ size_t mirath_tree_get_sibling(size_t node) {
  */
 void mirath_tree_get_revealed_nodes(size_t *output_revealed, size_t* output_length,
                                   const mirath_tree_t *tree,
-                                  const uint16_t *challenge_list, size_t challenge_length) {
+                                  const uint16_t *challenge_list, const size_t challenge_length) {
     size_t path_length = MIRATH_PARAM_TREE_DEPTH;
     size_t path_sets[path_length][challenge_length];
 

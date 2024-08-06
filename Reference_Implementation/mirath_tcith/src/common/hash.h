@@ -23,7 +23,6 @@ void hash_finalize(hash_t hash, hash_ctx_t ctx);
 /* Return 'True' if 'hash1' and 'hash2' are equal, and 'False' otherwise. */
 int hash_equal(hash_t hash1, hash_t hash2);
 
-/* Write over 'hash' the hash digest of 'salt', 'l', 'i', 'seed'. */
-void hash_digest0(hash_t hash, const hash_t salt, uint32_t l, uint32_t i, const seed_t seed);
+void hash_tree_digest(hash_t hash, const uint8_t *domain_separator, const uint8_t *salt, const uint8_t *e, const uint8_t* node);
 
 #endif

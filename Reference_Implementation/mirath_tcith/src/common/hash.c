@@ -34,13 +34,13 @@ int hash_equal(hash_t hash1, hash_t hash2)
     return memcmp(hash1, hash2, 2 * MIRATH_SECURITY_BYTES) == 0;
 }
 
-void hash_digest0(hash_t hash, const hash_t salt, uint32_t l, uint32_t i, const seed_t seed) {
+void hash_tree_digest(hash_t hash, const uint8_t *domain_separator, const uint8_t *salt, const uint8_t *e, const uint8_t *node) {
     hash_ctx_t ctx;
 
     hash_init(&ctx);
+    hash_update(ctx, domain_separator, sizeof(uint8_t));
     hash_update(ctx, salt, 2 * MIRATH_SECURITY_BYTES);
-    hash_update(ctx, (uint8_t *)&l, sizeof(l));
-    hash_update(ctx, (uint8_t *)&i, sizeof(i));
-    hash_update(ctx, seed, MIRATH_SECURITY_BYTES);
-    hash_finalize(ctx, hash);
+    hash_update(ctx, e, sizeof(uint8_t));
+    hash_update(ctx, node, MIRATH_SECURITY_BYTES);
+    hash_finalize(hash, ctx);
 }
