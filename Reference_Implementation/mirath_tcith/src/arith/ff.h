@@ -40,7 +40,7 @@ static inline ff_t mirath_ff_inv(const ff_t a) {
 /// \param a input element
 /// \param b input element
 /// \return a*b % 16
-static inline ff_t mirath_ff_mult(const ff_t a, const ff_t b) {
+static inline ff_t mirath_ff_product(const ff_t a, const ff_t b) {
     return mirath_ff_mult_table[a + 16 * b];
 }
 #endif

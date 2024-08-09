@@ -10,6 +10,10 @@
 #define MASK_MSB_PER_BIT (MASK_LSB_PER_BIT*0x80)
 #define MASK_XLSB_PER_BIT (MASK_LSB_PER_BIT*0xFE)
 
+static const uint8_t mirath_map_ff_to_ff_mu[16] __attribute__((aligned(32))) = {
+        0, 1, 92, 93, 224, 225, 188, 189, 80, 81, 12, 13, 176, 177, 236, 237
+};
+
 static const uint8_t mirath_ff_mu_mult_base[] __attribute__((aligned(256)))= {
 		// row_nr**1, row_nr**2, ..., row_nr**8
         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
