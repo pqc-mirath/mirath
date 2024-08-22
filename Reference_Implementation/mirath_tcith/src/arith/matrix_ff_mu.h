@@ -19,19 +19,65 @@ static inline void mirath_matrix_ff_mu_copy(ff_mu_t *matrix1, const ff_mu_t *mat
     memcpy(matrix1, matrix2, mirath_matrix_ff_mu_bytes_size(n_rows, n_cols));
 }
 
-/// matrix1 = matrix2 ^ matrix3
+/**
+ * \fn static inline void mirath_matrix_ff_mu_add(ff_mu_t *matrix1, const ff_mu_t *matrix2,
+ *                           const ff_mu_t *matrix3, const uint32_t n_rows,
+ *                           const uint32_t n_cols)
+ * \brief matrix1 = matrix2 + matrix3
+ *
+ * \param[out] matrix1 Matrix over ff_mu
+ * \param[in] matrix2 Matrix over ff_mu
+ * \param[in] matrix3 Matrix over ff_mu
+ * \param[in] n_rows number of rows
+ * \param[in] n_cols number of columns
+ */
 static inline void mirath_matrix_ff_mu_add(ff_mu_t *matrix1, const ff_mu_t *matrix2,
                              const ff_mu_t *matrix3, const uint32_t n_rows,
                              const uint32_t n_cols) {
-    const uint32_t n_bytes = n_rows*n_cols;
+    const uint32_t n_bytes = mirath_matrix_ff_mu_bytes_size(n_rows, n_cols);
 
     for (uint32_t i = 0; i < n_bytes; i++) {
         matrix1[i] = matrix2[i] ^ matrix3[i];
     }
 }
 
-/// matrix1 += scalar*matrix2
-/// NOTE: matrix2 is in base field
+/**
+ * \fn static inline void mirath_matrix_ff_mu_add_mu1ff(ff_mu_t *matrix1, const ff_mu_t *matrix2, const ff_t *matrix3,
+ *                                               const uint32_t n_rows, const uint32_t n_cols)
+ * \brief matrix1 = matrix2 + matrix3
+ *
+ * \param[out] matrix1 Matrix over ff_mu
+ * \param[in] matrix2 Matrix over ff_mu
+ * \param[in] matrix3 Matrix over ff
+ * \param[in] n_rows number of rows
+ * \param[in] n_cols number of columns
+ */
+static inline void mirath_matrix_ff_mu_add_mu1ff(ff_mu_t *matrix1, const ff_mu_t *matrix2, const ff_t *matrix3,
+                                                 const uint32_t n_rows, const uint32_t n_cols) {
+    for (uint32_t i = 0; i < n_rows; i++) {
+        for (uint32_t j = 0; j < n_cols; j++) {
+            ff_mu_t entry2;
+
+            const ff_mu_t entry1 = mirath_matrix_ff_mu_get_entry(matrix2, n_rows, i, j);
+            entry2 = mirath_matrix_ff_get_entry(matrix3, n_rows, i, j);
+            entry2 = mirath_map_ff_to_ff_mu[entry2];
+            entry2 = entry1 ^ entry2;
+            mirath_matrix_ff_mu_set_entry(matrix1, n_rows, i, j, entry2);
+        }
+    }
+}
+
+/**
+ * \fn static inline void mirath_matrix_ff_mu_add_multiple_ff(ff_mu_t *matrix1, ff_mu_t scalar, const ff_t *matrix2,
+ *                                       const uint32_t n_rows, const uint32_t n_cols)
+ * \brief matrix1 += scalar * matrix2
+ *
+ * \param[out] matrix1 Matrix over ff_mu
+ * \param[in] scalar scalar over ff_mu
+ * \param[in] matrix2 Matrix over ff
+ * \param[in] n_rows number of rows
+ * \param[in] n_cols number of columns
+ */
 static inline void mirath_matrix_ff_mu_add_multiple_ff(ff_mu_t *matrix1, ff_mu_t scalar, const ff_t *matrix2,
                                          const uint32_t n_rows, const uint32_t n_cols) {
     for (uint32_t i = 0; i < n_rows; i++) {
@@ -47,7 +93,17 @@ static inline void mirath_matrix_ff_mu_add_multiple_ff(ff_mu_t *matrix1, ff_mu_t
     }
 }
 
-/// matrix1 += scalar *matrix2
+/**
+ * \fn static void mirath_matrix_ff_mu_add_multiple_2(ff_mu_t *matrix1, ff_mu_t scalar, const ff_mu_t *matrix2,
+ *                                            const uint32_t n_rows, const uint32_t n_cols)
+ * \brief matrix1 += scalar * matrix2
+ *
+ * \param[out] matrix1 Matrix over ff_mu
+ * \param[in] scalar scalar over ff_mu
+ * \param[in] matrix2 Matrix over ff_mu
+ * \param[in] n_rows number of rows
+ * \param[in] n_cols number of columns
+ */
 static void mirath_matrix_ff_mu_add_multiple_2(ff_mu_t *matrix1, ff_mu_t scalar, const ff_mu_t *matrix2,
                                               const uint32_t n_rows, const uint32_t n_cols) {
     for (uint32_t i = 0; i < n_rows; i++) {
@@ -61,8 +117,20 @@ static void mirath_matrix_ff_mu_add_multiple_2(ff_mu_t *matrix1, ff_mu_t scalar,
     }
 }
 
-/// matrix1 = matrix2 + scalar *matrix3
-static inline void mirath_matrix_ff_mu_add_multiple(ff_mu_t *matrix1, const ff_mu_t *matrix2,
+/**
+ * \fn static inline void mirath_matrix_ff_mu_add_multiple_3(ff_mu_t *matrix1, const ff_mu_t *matrix2,
+ *                                    const ff_mu_t scalar, const ff_mu_t *matrix3,
+ *                                    const uint32_t n_rows, const uint32_t n_cols)
+ * \brief matrix1 = matrix2 + scalar * matrix3
+ *
+ * \param[out] matrix1 Matrix over ff_mu
+ * \param[in] matrix2 Matrix over ff_mu
+ * \param[in] scalar scalar over ff_mu
+ * \param[in] matrix3 Matrix over ff_mu
+ * \param[in] n_rows number of rows
+ * \param[in] n_cols number of columns
+ */
+static inline void mirath_matrix_ff_mu_add_multiple_3(ff_mu_t *matrix1, const ff_mu_t *matrix2,
                                       const ff_mu_t scalar, const ff_mu_t *matrix3,
                                       const uint32_t n_rows, const uint32_t n_cols) {
     for (uint32_t i = 0; i < n_rows; i++) {
@@ -76,10 +144,19 @@ static inline void mirath_matrix_ff_mu_add_multiple(ff_mu_t *matrix1, const ff_m
     }
 }
 
-/// result = matrix1 * matrix2
-/// matrix1 of size n_rows1 * n_cols1, in base field
-/// matrix2 of size n_cols1 * n_cols2
-/// result  of size n_rows1 * n_cols2
+/**
+ * \fn static inline void mirath_matrix_ff_mu_product_ff1mu(ff_mu_t *result, const ff_t *matrix1,
+ *                                     const ff_mu_t *matrix2, const uint32_t n_rows1,
+ *                                     const uint32_t n_cols1, const uint32_t n_cols2)
+ * \brief result = matrix1 * matrix2
+ *
+ * \param[out] result Matrix over ff_mu
+ * \param[in] matrix1 Matrix over ff
+ * \param[in] matrix2 Matrix over ff_mu
+ * \param[in] n_rows1 number of rows in matrix1
+ * \param[in] n_cols1 number of columns and rows in matrix1 and matrix2 respectively
+ * \param[in] n_cols2 number of columns in matrix2
+ */
 static inline void mirath_matrix_ff_mu_product_ff1mu(ff_mu_t *result, const ff_t *matrix1,
                                        const ff_mu_t *matrix2, const uint32_t n_rows1,
                                        const uint32_t n_cols1, const uint32_t n_cols2) {
@@ -101,10 +178,19 @@ static inline void mirath_matrix_ff_mu_product_ff1mu(ff_mu_t *result, const ff_t
     }
 }
 
-/// result = matrix1 * matrix2
-/// matrix1 of size n_rows1 * n_cols1
-/// matrix2 of size n_cols1 * n_cols2, in base field
-/// result  of size n_rows1 * n_cols2
+/**
+ * \fn static inline void mirath_matrix_ff_mu_product_mu1ff(ff_mu_t *result, const ff_mu_t *matrix1,
+ *                                     const ff_t *matrix2, const uint32_t n_rows1,
+ *                                     const uint32_t n_cols1, const uint32_t n_cols2)
+ * \brief result = matrix1 * matrix2
+ *
+ * \param[out] result Matrix over ff_mu
+ * \param[in] matrix1 Matrix over ff_mu
+ * \param[in] matrix2 Matrix over ff
+ * \param[in] n_rows1 number of rows in matrix1
+ * \param[in] n_cols1 number of columns and rows in matrix1 and matrix2 respectively
+ * \param[in] n_cols2 number of columns in matrix2
+ */
 static inline void mirath_matrix_ff_mu_product_mu1ff(ff_mu_t *result, const ff_mu_t *matrix1,
                                        const ff_t *matrix2, const uint32_t n_rows1,
                                        const uint32_t n_cols1, const uint32_t n_cols2) {
@@ -126,10 +212,19 @@ static inline void mirath_matrix_ff_mu_product_mu1ff(ff_mu_t *result, const ff_m
     }
 }
 
-/// result = matrix1 * matrix2
-// matrix1 of size n_rows1 * n_cols1
-// matrix2 of size n_cols1 * n_cols2
-// result  of size n_rows1 * n_cols2
+/**
+ * \fn static inline void mirath_matrix_ff_mu_product(ff_mu_t *result, const ff_mu_t *matrix1, const ff_mu_t *matrix2,
+ *                               const uint32_t n_rows1, const uint32_t n_cols1,
+ *                               const uint32_t n_cols2)
+ * \brief result = matrix1 * matrix2
+ *
+ * \param[out] result Matrix over ff_mu
+ * \param[in] matrix1 Matrix over ff_mu
+ * \param[in] matrix2 Matrix over ff_mu
+ * \param[in] n_rows1 number of rows in matrix1
+ * \param[in] n_cols1 number of columns and rows in matrix1 and matrix2 respectively
+ * \param[in] n_cols2 number of columns in matrix2
+ */
 static inline void mirath_matrix_ff_mu_product(ff_mu_t *result, const ff_mu_t *matrix1, const ff_mu_t *matrix2,
                                  const uint32_t n_rows1, const uint32_t n_cols1,
                                  const uint32_t n_cols2) {
@@ -150,10 +245,19 @@ static inline void mirath_matrix_ff_mu_product(ff_mu_t *result, const ff_mu_t *m
     }
 }
 
-/// result ^= matrix1 * matrix2
-// matrix1 of size n_rows1 * n_cols1
-// matrix2 of size n_cols1 * n_cols2
-// result  of size n_rows1 * n_cols2
+/**
+ * \fn static inline void mirath_matrix_ff_mu_add_product(ff_mu_t *result, const ff_mu_t *matrix1,
+ *                                   const ff_mu_t *matrix2, const uint32_t n_rows1,
+ *                                   const uint32_t n_cols1, const uint32_t n_cols2)
+ * \brief result += matrix1 * matrix2
+ *
+ * \param[out] result Matrix over ff_mu
+ * \param[in] matrix1 Matrix over ff_mu
+ * \param[in] matrix2 Matrix over ff_mu
+ * \param[in] n_rows1 number of rows in matrix1
+ * \param[in] n_cols1 number of columns and rows in matrix1 and matrix2 respectively
+ * \param[in] n_cols2 number of columns in matrix2
+ */
 static inline void mirath_matrix_ff_mu_add_product(ff_mu_t *result, const ff_mu_t *matrix1,
                                      const ff_mu_t *matrix2, const uint32_t n_rows1,
                                      const uint32_t n_cols1, const uint32_t n_cols2) {
@@ -174,7 +278,15 @@ static inline void mirath_matrix_ff_mu_add_product(ff_mu_t *result, const ff_mu_
     }
 }
 
-/// map from GF(16) to GF(256)
+/**
+ * \fn static inline void mirath_matrix_map_ff_to_ff_mu(ff_mu_t *out, const uint8_t *input, const uint32_t nrows, const uint32_t ncols)
+ * \brief mapping from ff to ff_mu
+ *
+ * \param[out] out Matrix over ff_mu
+ * \param[in] input Matrix over ff
+ * \param[in] nrows number of rows
+ * \param[in] ncols number of columns
+ */
 static inline void mirath_matrix_map_ff_to_ff_mu(ff_mu_t *out, const uint8_t *input, const uint32_t nrows, const uint32_t ncols) {
     for (uint32_t i = 0; i < ncols; ++i) {
         for (uint32_t j = 0; j < nrows; ++j) {

@@ -7,41 +7,97 @@
 #include "ff_mu.h"
 #include "vector_ff_arith.h"
 
-/// vector1 = vector2 + vector3
-static inline void mirath_vector_ff_mu_add(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t *vector3, const uint32_t d) {
-    for (uint32_t i = 0; i < d; i++) {
+/**
+ * \fn static inline void mirath_vector_ff_mu_add(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t *vector3, const uint32_t ncols)
+ * \brief vector1 = vector2 + vector3
+ *
+ * \param[out] vector1 Vector over ff_mu
+ * \param[in] vector2 Vector over ff_mu
+ * \param[in] vector3 Vector over ff_mu
+ * \param[in] ncols number of columns
+ */
+static inline void mirath_vector_ff_mu_add(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t *vector3, const uint32_t ncols) {
+    for (uint32_t i = 0; i < ncols; i++) {
         vector1[i] = vector2[i] ^ vector3[i];
     }
 }
 
-/// vector1 = vector2 * value
-/// NOTE: vector2 is in base field
-static inline void mirath_vector_ff_mu_mult_multiple_ff(ff_mu_t *vector1, const ff_mu_t scalar, const ff_t *vector2, const uint32_t d) {
-    for (uint32_t i = 0; i < d; i++) {
+/**
+ * \fn static inline void mirath_vector_ff_mu_add_ff(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_t *vector3, const uint32_t ncols)
+ * \brief vector1 = vector2 + vector3
+ *
+ * \param[out] vector1 Vector over ff_mu
+ * \param[in] vector2 Vector over ff_mu
+ * \param[in] vector3 Vector over ff
+ * \param[in] ncols number of columns
+ */
+static inline void mirath_vector_ff_mu_add_ff(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_t *vector3, const uint32_t ncols) {
+    for (uint32_t i = 0; i < ncols; i++) {
+        const ff_t t = mirath_matrix_ff_get_entry(vector3, 1, i, 0);
+        vector1[i] = vector2[i] ^ mirath_map_ff_to_ff_mu[t];
+    }
+}
+
+/**
+ * \fn static inline void mirath_vector_ff_mu_mult_multiple_ff(ff_mu_t *vector1, const ff_mu_t scalar, const ff_t *vector2, const uint32_t ncols)
+ * \brief vector1 = vector2 * scalar
+ *
+ * \param[out] vector1 Vector over ff_mu
+ * \param[in] scalar Scalar over ff_mu
+ * \param[in] vector2 Vector over ff
+ * \param[in] ncols number of columns
+ */
+static inline void mirath_vector_ff_mu_mult_multiple_ff(ff_mu_t *vector1, const ff_mu_t scalar, const ff_t *vector2, const uint32_t ncols) {
+    for (uint32_t i = 0; i < ncols; i++) {
         const ff_t t = mirath_matrix_ff_get_entry(vector2, 1, i, 0);
         vector1[i] = mirath_ff_mu_mult(scalar, mirath_map_ff_to_ff_mu[t]);
     }
 }
 
-/// vector1 = vector2 + scalar*vector3
-/// NOTE: vector3 is in base field
-static inline void mirath_vector_ff_mu_add_multiple_ff(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t scalar, const ff_t *vector3, const uint32_t d) {
-    for (uint32_t i = 0; i < d; i++) {
+/**
+ * \fn static inline void mirath_vector_ff_mu_add_multiple_ff(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t scalar, const ff_t *vector3, const uint32_t ncols)
+ * \brief vector1 = vector2 + scalar * vector3
+ *
+ * \param[out] vector1 Vector over ff_mu
+ * \param[in] vector2 Vector over ff_mu
+ * \param[in] scalar Scalar over ff_mu
+ * \param[in] vector3 Vector over ff
+ * \param[in] ncols number of columns
+ */
+static inline void mirath_vector_ff_mu_add_multiple_ff(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t scalar, const ff_t *vector3, const uint32_t ncols) {
+    for (uint32_t i = 0; i < ncols; i++) {
         const ff_t t = mirath_matrix_ff_get_entry(vector3, 1, i, 0);
         vector1[i] = vector2[i] ^ mirath_ff_mu_mult(scalar, mirath_map_ff_to_ff_mu[t]);
     }
 }
 
-/// vector1 = vector2 * value
-static inline void mirath_vector_ff_mu_mult_multiple(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t value, const uint32_t d) {
-    for (uint32_t i = 0; i < d; i++) {
-        vector1[i] = mirath_ff_mu_mult(vector2[i], value);
+/**
+ * \fn static inline void mirath_vector_ff_mu_mult_multiple(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t scalar, const uint32_t ncols)
+ * \brief vector1 = vector2 * scalar
+ *
+ * \param[out] vector1 Vector over ff_mu
+ * \param[in] vector2 Vector over ff_mu
+ * \param[in] scalar Scalar over ff_mu
+ * \param[in] ncols number of columns
+ */
+static inline void mirath_vector_ff_mu_mult_multiple(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t scalar, const uint32_t ncols) {
+    for (uint32_t i = 0; i < ncols; i++) {
+        vector1[i] = mirath_ff_mu_mult(vector2[i], scalar);
     }
 }
 
-///  vector1 = vector2 + vector3 * value
-static inline void mirath_vector_ff_mu_add_multiple(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t scalar, const ff_mu_t *vector3, const uint32_t d) {
-    for (uint32_t i = 0; i < d; i++) {
+/**
+ * \fn static inline void mirath_vector_ff_mu_mult_multiple(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t scalar, const uint32_t ncols)
+ * \brief vector1 = vector2 + vector3 * value
+ *
+ * \param[out] vector1 Vector over ff_mu
+ * \param[in] vector2 Vector over ff_mu
+ * \param[in] scalar Scalar over ff_mu
+ * \param[in] vector3 Vector over ff_mu
+ * \param[in] ncols number of columns
+ */
+static inline void mirath_vector_ff_mu_add_multiple(ff_mu_t *vector1, const ff_mu_t *vector2, const ff_mu_t scalar, const ff_mu_t *vector3, const uint32_t ncols) {
+    for (uint32_t i = 0; i < ncols; i++) {
         vector1[i] = vector2[i] ^ mirath_ff_mu_mult(scalar, vector3[i]);
     }
 }

@@ -5,6 +5,7 @@
 #include "prng.h"
 #include "vector_ff_mu.h"
 #include "matrix_ff_mu.h"
+#include "mirath_matrix_ff.h"
 
 #define NTESTS 100
 
@@ -78,56 +79,133 @@ void tests_ff_mu(mirath_prng_t prng) {
 
 int test_matrix_ff_mu(mirath_prng_t prng) {
 
-    printf("Testing mirath_matrix_ff_mu_add_multiple_ff(): ");
+    printf("Testing: \n");
+    printf("\tmirath_matrix_ff_mu_add()\n");
+    printf("\tmirath_matrix_ff_mu_add_mu1ff()\n");
+    printf("Status: ");
+    for (uint32_t i = 0; i < NTESTS; i++) {
+        ff_mu_t zero[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+
+        ff_mu_t A[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_mu_t B[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
+        ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
+
+        mirath_prng(&prng, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+        mirath_matrix_ff_init_random(C, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1, &prng);
+
+        mirath_matrix_ff_mu_add_mu1ff(A, B, C, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        ff_mu_t X[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_mu_t Y[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
+
+        mirath_matrix_map_ff_to_ff_mu(Y, C, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        mirath_matrix_ff_mu_add(X, B, Y, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+        mirath_matrix_ff_mu_add(X, A, X, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        if (memcmp(X, zero, mirath_matrix_ff_mu_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)) != 0) {
+            printf("FAIL (mirath_matrix_ff_mu_add != mirath_matrix_ff_mu_add_mu1ff)\n");
+            return -1;
+        }
+    }
+    printf("OK!\n");
+
+    printf("Testing:\n");
+    printf("\tmirath_matrix_ff_mu_add_multiple_ff()\n");
+    printf("\tmirath_matrix_ff_mu_add_multiple_2()\n");
+    printf("\tmirath_matrix_ff_mu_add_multiple_3()\n");
+    printf("Status: ");
     for (uint32_t i = 0; i < NTESTS; i++) {
         // TODO: use the correct parameters
-        ff_mu_t A[MIRATH_PARAM_TAU * MIRATH_PARAM_RHO] = {0};
-        ff_t B[mirath_matrix_ff_bytes_size(MIRATH_PARAM_TAU, MIRATH_PARAM_RHO)];
+        ff_mu_t A[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_t B[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
         ff_mu_t scalar;
 
-        mirath_prng(&prng, B, sizeof(B));
+        mirath_matrix_ff_init_random(B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1, &prng);
         mirath_prng(&prng, &scalar, sizeof(scalar));
 
-        mirath_matrix_ff_mu_add_multiple_ff(A, scalar, B, MIRATH_PARAM_TAU * MIRATH_PARAM_RHO, 1);
+        mirath_matrix_ff_mu_add_multiple_ff(A, scalar, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
 
-        ff_mu_t X[MIRATH_PARAM_TAU * MIRATH_PARAM_RHO] = {0};
-        ff_mu_t Y[MIRATH_PARAM_TAU * MIRATH_PARAM_RHO];
+        ff_mu_t X[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_mu_t Y[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
 
-        mirath_matrix_map_ff_to_ff_mu(Y, B, MIRATH_PARAM_TAU * MIRATH_PARAM_RHO, 1);
+        mirath_matrix_map_ff_to_ff_mu(Y, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
 
-        mirath_matrix_ff_mu_add_multiple_2(X, scalar, Y, MIRATH_PARAM_TAU * MIRATH_PARAM_RHO, 1);
+        mirath_matrix_ff_mu_add_multiple_2(X, scalar, Y, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
 
-        for (uint32_t j = 0; j < MIRATH_PARAM_TAU * MIRATH_PARAM_RHO; j++) {
+        for (uint32_t j = 0; j < MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K; j++) {
             if (A[j] != X[j]) {
-                printf("FAIL (A != X)\n");
+                printf("FAIL (mirath_matrix_ff_mu_add_multiple_ff != mirath_matrix_ff_mu_add_multiple_2)\n");
+                return -1;
+            }
+        }
+
+        memset(X, 0, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        mirath_matrix_ff_mu_add_multiple_3(X, X, scalar, Y, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        for (uint32_t j = 0; j < MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K; j++) {
+            if (A[j] != X[j]) {
+                printf("FAIL (mirath_matrix_ff_mu_add_multiple_ff != mirath_matrix_ff_mu_add_multiple_3)\n");
                 return -1;
             }
         }
     }
     printf("OK!\n");
 
-    printf("Testing mirath_matrix_ff_mu_product_ff1mu(): ");
+    printf("Testing:\n");
+    printf("\tmirath_matrix_ff_mu_product_ff1mu()\n");
+    printf("\tmirath_matrix_ff_mu_product()\n");
+    printf("Status: ");
     for (uint32_t i = 0; i < NTESTS; i++) {
         // TODO: use the correct parameters
-        ff_mu_t R[MIRATH_PARAM_TAU * MIRATH_PARAM_RHO] = {0};
-        ff_t A[mirath_matrix_ff_bytes_size(MIRATH_PARAM_TAU, MIRATH_PARAM_TAU)];
-        ff_mu_t B[MIRATH_PARAM_TAU];
+        ff_mu_t R[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_t A[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)];
+        ff_mu_t B[MIRATH_PARAM_K];
 
-        mirath_prng(&prng, A, sizeof(A));
-        mirath_prng(&prng, B, sizeof(B));
+        mirath_matrix_ff_init_random(A, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K, &prng);
+        mirath_prng(&prng, B, MIRATH_PARAM_K);
 
-        mirath_matrix_ff_mu_product_ff1mu(R, A, B, MIRATH_PARAM_TAU, MIRATH_PARAM_RHO * 2, MIRATH_PARAM_RHO);
+        mirath_matrix_ff_mu_product_ff1mu(R, A, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K, 1);
 
-        ff_mu_t X[MIRATH_PARAM_TAU * MIRATH_PARAM_RHO] = {0};
-        ff_mu_t Y[MIRATH_PARAM_TAU * MIRATH_PARAM_TAU];
+        ff_mu_t X[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_mu_t Y[mirath_matrix_ff_mu_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)];
 
-        mirath_matrix_map_ff_to_ff_mu(Y, A, MIRATH_PARAM_TAU, MIRATH_PARAM_TAU);
+        mirath_matrix_map_ff_to_ff_mu(Y, A, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K);
 
-        mirath_matrix_ff_mu_product(X, Y, B, MIRATH_PARAM_TAU, MIRATH_PARAM_RHO * 2, MIRATH_PARAM_RHO);
+        mirath_matrix_ff_mu_product(X, Y, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K, 1);
 
-        for (uint32_t j = 0; j < MIRATH_PARAM_TAU * MIRATH_PARAM_RHO; j++) {
+        for (uint32_t j = 0; j < MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K; j++) {
             if (R[j] != X[j]) {
-                printf("FAIL (R != X)\n");
+                printf("FAIL (mirath_matrix_ff_mu_product_ff1mu != mirath_matrix_ff_mu_product)\n");
+                return -1;
+            }
+        }
+    }
+    printf("OK!\n");
+
+    printf("Testing mirath_matrix_ff_mu_product_mu1ff(): ");
+    for (uint32_t i = 0; i < NTESTS; i++) {
+        // TODO: use the correct parameters
+        ff_mu_t R[MIRATH_PARAM_K] = {0};
+        ff_t A[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
+        ff_mu_t B[MIRATH_PARAM_K * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)];
+
+        mirath_matrix_ff_init_random(A, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1, &prng);
+        mirath_prng(&prng, B, MIRATH_PARAM_K * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K));
+
+        mirath_matrix_ff_mu_product_mu1ff(R, B, A, MIRATH_PARAM_K, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        ff_mu_t X[MIRATH_PARAM_K] = {0};
+        ff_mu_t Y[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
+
+        mirath_matrix_map_ff_to_ff_mu(Y, A, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        mirath_matrix_ff_mu_product(X, B, Y, MIRATH_PARAM_K, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        for (uint32_t j = 0; j < MIRATH_PARAM_K; j++) {
+            if (R[j] != X[j]) {
+                printf("FAIL (mirath_matrix_ff_mu_product_mu1ff != mirath_matrix_ff_mu_product)\n");
                 return -1;
             }
         }
