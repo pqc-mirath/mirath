@@ -215,6 +215,95 @@ int test_matrix_ff_mu(mirath_prng_t prng) {
     return 0;
 }
 
+int test_vector_ff_mu(mirath_prng_t prng) {
+    printf("Testing: \n");
+    printf("\tmirath_vector_ff_mu_add_ff()\n");
+    printf("\tmirath_vector_ff_mu_add()\n");
+    printf("Status: ");
+    for (uint32_t i = 0; i < NTESTS; i++) {
+        ff_mu_t zero[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+
+        ff_mu_t A[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_mu_t B[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
+        ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
+
+        mirath_prng(&prng, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+        mirath_matrix_ff_init_random(C, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1, &prng);
+
+        mirath_vector_ff_mu_add_ff(A, B, C, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        ff_mu_t X[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_mu_t Y[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
+
+        mirath_matrix_map_ff_to_ff_mu(Y, C, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        mirath_vector_ff_mu_add(X, B, Y, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+        mirath_vector_ff_mu_add(X, A, X, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        if (memcmp(X, zero, mirath_matrix_ff_mu_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)) != 0) {
+            printf("FAIL (mirath_vector_ff_mu_add_ff != mirath_vector_ff_mu_add)\n");
+            return -1;
+        }
+    }
+    printf("OK!\n");
+
+    printf("Testing:\n");
+    printf("\tmirath_vector_ff_mu_mult_multiple_ff()\n");
+    printf("\tmirath_vector_ff_mu_add_multiple_ff()\n");
+    printf("\tmirath_vector_ff_mu_mult_multiple()\n");
+    printf("\tmirath_vector_ff_mu_add_multiple()\n");
+    printf("Status: ");
+    for (uint32_t i = 0; i < NTESTS; i++) {
+        const ff_mu_t zero[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        // TODO: use the correct parameters
+        ff_mu_t A[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_t B[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
+        ff_mu_t C[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
+        ff_mu_t scalar;
+
+        ff_mu_t X[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K] = {0};
+        ff_mu_t Y[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
+        ff_mu_t Z[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K];
+
+        mirath_matrix_ff_init_random(B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1, &prng);
+        mirath_prng(&prng, &scalar, sizeof(scalar));
+        mirath_prng(&prng, C, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        mirath_vector_ff_mu_mult_multiple_ff(A, scalar, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        mirath_matrix_map_ff_to_ff_mu(Y, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+        mirath_vector_ff_mu_mult_multiple(X, scalar, Y, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        mirath_vector_ff_mu_add(X, A, X, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        if (memcmp(X, zero, mirath_matrix_ff_mu_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)) != 0) {
+            printf("FAIL (mirath_vector_ff_mu_mult_multiple_ff != mirath_vector_ff_mu_mult_multiple)\n");
+            return -1;
+        }
+
+        mirath_vector_ff_mu_add_multiple_ff(Z, C, scalar, B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+        mirath_vector_ff_mu_add(X, A, C, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+        mirath_vector_ff_mu_add(Z, X, Z, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        if (memcmp(Z, zero, mirath_matrix_ff_mu_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)) != 0) {
+            printf("FAIL: mirath_vector_ff_mu_add_multiple_ff\n");
+            return -1;
+        }
+
+        mirath_vector_ff_mu_add_multiple(Z, C, scalar, Y, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+        mirath_vector_ff_mu_add(Z, X, Z, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+
+        if (memcmp(Z, zero, mirath_matrix_ff_mu_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)) != 0) {
+            printf("FAIL: mirath_vector_ff_mu_add_multiple_ff\n");
+            return -1;
+        }
+    }
+    printf("OK!\n");
+
+    return 0;
+}
+
 int main(int argc, char **argv) {
     mirath_prng_t prng;
     mirath_prng_init(&prng, NULL, NULL);
@@ -224,6 +313,9 @@ int main(int argc, char **argv) {
     tests_ff_mu(prng);
 
     if (test_matrix_ff_mu(prng) != 0)
+        return -1;
+
+    if (test_vector_ff_mu(prng) != 0)
         return -1;
 
     return 0;
