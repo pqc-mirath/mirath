@@ -2,7 +2,7 @@
 #define MIRATH_MATRIX_FF_H
 
 #include <stdint.h>
-#include "arith/data_type_arith.h"
+#include "arith/data_type.h"
 #include "prng.h"
 #include "arith/matrix_ff_arith.h"
 

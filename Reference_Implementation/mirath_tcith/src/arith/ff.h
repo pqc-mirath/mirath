@@ -2,7 +2,7 @@
 #define ARITH_FF_H
 
 #include <stdint.h>
-#include "data_type_arith.h"
+#include "data_type.h"
 
 /// i*j = [i*16 + j]
 static ff_t mirath_ff_mult_table[256] = {
