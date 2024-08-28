@@ -18,6 +18,8 @@ ff_t mirath_matrix_ff_get_entry(const ff_t *matrix, const uint32_t n_rows, const
 /* Set the (i, j) entry of 'matrix' to be scalar.*/
 void mirath_matrix_ff_set_entry(ff_t *matrix, const uint32_t n_rows, const uint32_t i, const uint32_t j, const ff_t scalar);
 
+void mirath_matrix_set_to_ff(ff_t *matrix, const uint32_t n_rows, const uint32_t n_cols);
+
 /* Initialized 'matrix' with random entries. */
 void mirath_matrix_ff_init_random(ff_t *matrix, const uint32_t n_rows, const uint32_t n_cols, mirath_prng_t *prng);
 

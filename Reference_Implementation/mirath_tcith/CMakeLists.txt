@@ -23,12 +23,17 @@ if(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
     set(CMAKE_ASM_FLAGS "-x assembler-with-cpp -Wa,-defsym,old_gas_syntax=1 -Wa,-defsym,no_plt=1")
 endif()
 
+# just for debugging
+add_definitions(-DMIRATH_DETERMINISTIC)
+
 set(COMMON_SOURCES
         ${PROJECT_SOURCE_DIR}/src/common/prng.c
         ${PROJECT_SOURCE_DIR}/src/common/fips202.c
         ${PROJECT_SOURCE_DIR}/src/common/hash.c
         ${PROJECT_SOURCE_DIR}/src/common/KeccakHash.c
         ${PROJECT_SOURCE_DIR}/src/common/KeccakP-1600-AVX2.s
+        ${PROJECT_SOURCE_DIR}/src/common/random.c
+        ${PROJECT_SOURCE_DIR}/src/common/parsing.c
 )
 
 add_executable(tests_arith src/tests/tests_arith.c ${COMMON_SOURCES} src/mirath_matrix_ff.c)
