@@ -8,6 +8,8 @@
 #include "vector_ff_mu.h"
 #include "mirath_matrix_ff.h"
 #include "parsing.h"
+#include "mirath_tree.h"
+#include "mirath_tcith.h"
 
 const ff_mu_t phi_table_ff_mu[256] = {
         0, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53, 106, 212, 179, 125,
@@ -203,8 +205,16 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
 }
 
 int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_len, uint8_t *sk) {
-    uint8_t salt[16];
+    uint8_t salt[2 * MIRATH_SECURITY_BYTES];
     seed_t rseed;
+    uint8_t salt_and_rseed[3 * MIRATH_SECURITY_BYTES] = {0};
+    mirath_tree_leaves_t seeds;
+    mirath_tree_t tree;
+
+    mirath_tcith_commit_t *commits[MIRATH_PARAM_TAU];
+    mirath_tcith_commit_1_t commits_1 = {0};
+    mirath_tcith_commit_2_t commits_2 = {0};
+    mirath_tcith_commit_set_as_a_grid_list(commits, &commits_1, &commits_2);
 
     hash_t hash1;
     hash_t hash2_partial;
@@ -233,21 +243,62 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     parse_secret_key(S, C, H, sk);
 
     // step 3
-    randombytes(salt, 16);
+    randombytes(salt, 2 * MIRATH_SECURITY_BYTES);
 
     // Phase 1: Sharing and commitments
     // step 4
     randombytes(rseed, MIRATH_SECURITY_BYTES);
 
     // step 5
+    mirath_tree_init(&tree);
+    memcpy(&salt, salt_and_rseed, 2 * MIRATH_SECURITY_BYTES);                                 // salt
+    memcpy(tree.nodes[0], &salt_and_rseed[2 * MIRATH_SECURITY_BYTES], MIRATH_SECURITY_BYTES); // root seed
+    tree.nonempty[0] = 1;
+    mirath_tree_prg(&tree, salt, 0);
+    mirath_tree_get_leaves(seeds, &tree);
 
     // step 6 and 7
     hash_init(&hash_ctx);
-    hash_update(hash_ctx, salt, 16);
+    hash_update(hash_ctx, salt, 2 * MIRATH_SECURITY_BYTES);
     hash_update(hash_ctx, h_com, 2 * MIRATH_SECURITY_BYTES);
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
-        // TODO: buildsharing
+//        // TODO: buildsharing
+//        // NOTE: Below is what TCitH.BuildSharing_N performs (we need some computed data in MPC steps and signature
+//        size_t N = e < MIRATH_PARAM_TAU_1? MIRATH_PARAM_N_1 : MIRATH_PARAM_N_2;
+//        for(size_t i = 0; i < N; i++) {
+//            size_t idx = mirath_tcith_psi(i, e);
+//
+//            // Compute commit and add it to ctx_h1
+//            mirath_tcith_commit(commits[e][i], salt, e, i, seeds[idx]);
+//            hash_update(&hash_ctx, commits[e][i], 2 * MIRATH_SECURITY_BYTES);
+//            mirath_tcith_share_sample(si, Ci, vi, seeds[idx], salt); // Sampling bytes and parsing to the vec/mat (Fq)
+//
+//            vec_add(ss[e], ss[e], si, MIRATH_PARAM_R - 1);
+//            mat_fq_add(Cs[e], Cs[e], Ci, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+//            vec_add(vs[e], vs[e], vi, MIRATH_PARAM_RHO);
+//
+//            // Compute random shares
+//            ff_mu_t phi_i;
+//            // Apply phi with index i;
+//
+//            vec_scalar_mul(si, si, phi_i, MIRATH_PARAM_R - 1);
+//            mat_fq_mul_by_constant(Di, Ci, phi_i, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+//            vec_scalar_mul(vi, vi, phi_i, MIRATH_PARAM_RHO);
+//
+//            vec_add(shares.s[e], shares.s[e], si, MIRATH_PARAM_R - 1);
+//            mat_add(shares.C[e], shares.C[e], Di, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+//            vec_add(shares.v[e], shares.v[e], vi, MIRATH_PARAM_RHO);
+//        }
+//
+//        // Recall, add = sub in fields of characteristic two
+//
+//        // Compute (s - ss[e])
+//        vec_add(ss[e], (rbc_vec)&s[1], ss[e], MIRATH_PARAM_R - 1);
+//        // Compute (C - Cs[e])
+//        mat_fq_add(Cs[e], C, Cs[e], MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+//
+//        // Compute aux from s[e] and C[e]
 
         hash_update(hash_ctx, aux[e], mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1));
     }
@@ -264,7 +315,7 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     // step 10 adn 11
     hash_init(&hash_ctx);
     hash_update(hash_ctx, msg, msg_len);
-    hash_update(hash_ctx, salt, 16);
+    hash_update(hash_ctx, salt, 2 * MIRATH_SECURITY_BYTES);
     hash_update(hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
