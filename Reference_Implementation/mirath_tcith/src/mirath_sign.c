@@ -9,6 +9,20 @@
 #include "mirath_matrix_ff.h"
 #include "parsing.h"
 
+const ff_mu_t phi_table_ff_mu[256] = {
+        0, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53, 106, 212, 179, 125,
+        250, 239, 197, 145, 57, 114, 228, 211, 189, 97, 194, 159, 37, 74, 148, 51, 102, 204, 131, 29, 58, 116, 232, 203,
+        141, 1, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53, 106, 212, 179,
+        125, 250, 239, 197, 145, 57, 114, 228, 211, 189, 97, 194, 159, 37, 74, 148, 51, 102, 204, 131, 29, 58, 116, 232,
+        203, 141, 1, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53, 106, 212,
+        179, 125, 250, 239, 197, 145, 57, 114, 228, 211, 189, 97, 194, 159, 37, 74, 148, 51, 102, 204, 131, 29, 58, 116,
+        232, 203, 141, 1, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53, 106,
+        212, 179, 125, 250, 239, 197, 145, 57, 114, 228, 211, 189, 97, 194, 159, 37, 74, 148, 51, 102, 204, 131, 29, 58,
+        116, 232, 203, 141, 1, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53,
+        106, 212, 179, 125, 250, 239, 197, 145, 57, 114, 228, 211, 189, 97, 194, 159, 37, 74, 148, 51, 102, 204, 131,
+        29, 58, 116, 232, 203, 141, 1
+};
+
 // this is just for the reference implementation
 // use pointers in the optimized implementation
 void split_codeword_ff_mu(ff_mu_t e_A[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K], ff_mu_t e_B[MIRATH_PARAM_K],
@@ -343,12 +357,10 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
     hash_update(hash_ctx, salt, 16);
     hash_update(hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
 
-    // TODO use the correct values for phi
-    ff_mu_t phi = 0;
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
         ff_mu_t base_alpha[MIRATH_PARAM_RHO];
 
-        emulateparty_mu(base_alpha, phi, share_S[e], share_C[e], share_v[e], gamma, H, y, mid_alpha[e]);
+        emulateparty_mu(base_alpha, phi_table_ff_mu[i_star[e]], share_S[e], share_C[e], share_v[e], gamma, H, y, mid_alpha[e]);
 
         hash_update(hash_ctx, base_alpha, sizeof(ff_mu_t) * (MIRATH_PARAM_M * (MIRATH_PARAM_N - MIRATH_PARAM_R)));
         hash_update(hash_ctx, mid_alpha[e], sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
