@@ -36,9 +36,18 @@ set(COMMON_SOURCES
         ${PROJECT_SOURCE_DIR}/src/common/parsing.c
 )
 
-add_executable(tests_arith src/tests/tests_arith.c ${COMMON_SOURCES} src/mirath_matrix_ff.c)
-target_include_directories(tests_arith PRIVATE src src/arith src/common)
+set(MIRATH_SOURCES
+        ${PROJECT_SOURCE_DIR}/src/mirath_matrix_ff.c
+        ${PROJECT_SOURCE_DIR}/src/mirath_tree.c
+        ${PROJECT_SOURCE_DIR}/src/mirath_tcith.c
+        ${PROJECT_SOURCE_DIR}/src/mirath_sign.c
+)
 
-add_executable(tests_tree src/tests/tests_tree.c ${COMMON_SOURCES} src/mirath_tree.c)
-target_include_directories(tests_tree PRIVATE src src/common)
+add_executable(test_arith src/tests/test_arith.c ${COMMON_SOURCES} src/mirath_matrix_ff.c)
+target_include_directories(test_arith PRIVATE src src/arith src/common)
 
+add_executable(test_tree src/tests/test_tree.c ${COMMON_SOURCES} src/mirath_tree.c)
+target_include_directories(test_tree PRIVATE src src/common)
+
+add_executable(test_mirath src/tests/test_mirath.c ${COMMON_SOURCES} ${MIRATH_SOURCES})
+target_include_directories(test_mirath PRIVATE src src/arith src/common)

@@ -6,6 +6,17 @@
 #define mirath_matrix_ff_bytes_per_column(n_rows) (((n_rows) >> 1u) + ((n_rows) & 1u))
 #define mirath_matrix_ff_bytes_size(n_rows, n_cols) ((mirath_matrix_ff_bytes_per_column(n_rows)) * (n_cols))
 
+static inline void mirath_matrix_set_to_ff(ff_t *matrix, const uint32_t n_rows, const uint32_t n_cols) {
+    if (n_rows & 1) {
+        const uint32_t matrix_height =  mirath_matrix_ff_bytes_per_column(n_rows);
+        const uint32_t matrix_height_x = matrix_height -  1;
+
+        for (uint32_t i = 0; i < n_cols; i++) {
+            matrix[i * matrix_height + matrix_height_x ] &= 0x0f;
+        }
+    }
+}
+
 static inline ff_t mirath_matrix_ff_get_entry(const ff_t *matrix, const uint32_t n_rows, const uint32_t i, const uint32_t j) {
     const uint32_t nbytes_col = mirath_matrix_ff_bytes_per_column(n_rows);
     if (i & 1u) { // i is odd

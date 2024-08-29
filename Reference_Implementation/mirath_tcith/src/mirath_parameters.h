@@ -27,6 +27,7 @@
 #define MIRATH_PARAM_N 16
 #define MIRATH_PARAM_K 64
 #define MIRATH_PARAM_R 8
+#define MIRATH_N_PARTIES 256
 
 #define MIRATH_PARAM_TREE_NODES 7167		/**< Number of nodes in the tree */
 #define MIRATH_PARAM_TREE_LEAVES 3072	    /**< Number of leaves in the tree */

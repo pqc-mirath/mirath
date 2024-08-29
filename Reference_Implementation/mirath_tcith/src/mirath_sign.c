@@ -11,7 +11,7 @@
 #include "mirath_tree.h"
 #include "mirath_tcith.h"
 
-const ff_mu_t phi_table_ff_mu[256] = {
+const ff_mu_t phi_table_ff_mu[MIRATH_N_PARTIES] = {
         0, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53, 106, 212, 179, 125,
         250, 239, 197, 145, 57, 114, 228, 211, 189, 97, 194, 159, 37, 74, 148, 51, 102, 204, 131, 29, 58, 116, 232, 203,
         141, 1, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53, 106, 212, 179,
@@ -205,9 +205,9 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
 }
 
 int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_len, uint8_t *sk) {
-    uint8_t salt[2 * MIRATH_SECURITY_BYTES];
+    uint8_t salt[MIRATH_SECURITY_BYTES];
     seed_t rseed;
-    uint8_t salt_and_rseed[3 * MIRATH_SECURITY_BYTES] = {0};
+    uint8_t salt_and_rseed[2 * MIRATH_SECURITY_BYTES] = {0};
     mirath_tree_leaves_t seeds;
     mirath_tree_t tree;
 
@@ -243,7 +243,7 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     parse_secret_key(S, C, H, sk);
 
     // step 3
-    randombytes(salt, 2 * MIRATH_SECURITY_BYTES);
+    randombytes(salt, MIRATH_SECURITY_BYTES);
 
     // Phase 1: Sharing and commitments
     // step 4
@@ -251,8 +251,8 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
 
     // step 5
     mirath_tree_init(&tree);
-    memcpy(&salt, salt_and_rseed, 2 * MIRATH_SECURITY_BYTES);                                 // salt
-    memcpy(tree.nodes[0], &salt_and_rseed[2 * MIRATH_SECURITY_BYTES], MIRATH_SECURITY_BYTES); // root seed
+    memcpy(&salt, salt_and_rseed, MIRATH_SECURITY_BYTES);                                 // salt
+    memcpy(tree.nodes[0], &salt_and_rseed[MIRATH_SECURITY_BYTES], MIRATH_SECURITY_BYTES); // root seed
     tree.nonempty[0] = 1;
     mirath_tree_prg(&tree, salt, 0);
     mirath_tree_get_leaves(seeds, &tree);

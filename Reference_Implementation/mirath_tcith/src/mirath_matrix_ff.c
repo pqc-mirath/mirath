@@ -8,17 +8,6 @@ void mirath_matrix_init_zero(ff_t *matrix, const uint32_t n_rows, const uint32_t
     memset(matrix, 0, mirath_matrix_ff_bytes_size(n_rows, n_cols));
 }
 
-void mirath_matrix_set_to_ff(ff_t *matrix, const uint32_t n_rows, const uint32_t n_cols) {
-    if (n_rows & 1) {
-        const uint32_t matrix_height =  mirath_matrix_ff_bytes_per_column(n_rows);
-        const uint32_t matrix_height_x = matrix_height -  1;
-
-        for (uint32_t i = 0; i < n_cols; i++) {
-            matrix[i * matrix_height + matrix_height_x ] &= 0x0f;
-        }
-    }
-}
-
 //
 void mirath_matrix_ff_init_random(ff_t *matrix, const uint32_t n_rows, const uint32_t n_cols, mirath_prng_t *prng) {
     const uint32_t matrix_bytes = mirath_matrix_ff_bytes_size(n_rows, n_cols);
