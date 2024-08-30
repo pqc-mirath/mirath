@@ -23,6 +23,7 @@
 #define MIRATH_PARAM_RHO 32			        /**< Parameter rho of the scheme (dimension of the extension)*/
 
 // TODO set the correct values
+#define MIRATH_PARAM_SALT_BYTES (MIRATH_SECURITY_BYTES * 2)
 #define MIRATH_PARAM_M 16
 #define MIRATH_PARAM_N 16
 #define MIRATH_PARAM_K 64

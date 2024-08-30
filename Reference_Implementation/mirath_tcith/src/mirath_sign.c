@@ -205,9 +205,9 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
 }
 
 int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_len, uint8_t *sk) {
-    uint8_t salt[MIRATH_SECURITY_BYTES];
+    uint8_t salt[MIRATH_PARAM_SALT_BYTES];
     seed_t rseed;
-    uint8_t salt_and_rseed[2 * MIRATH_SECURITY_BYTES] = {0};
+    uint8_t salt_and_rseed[MIRATH_PARAM_SALT_BYTES + MIRATH_SECURITY_BYTES] = {0};
     mirath_tree_leaves_t seeds;
     mirath_tree_t tree;
 
@@ -243,7 +243,7 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     parse_secret_key(S, C, H, sk);
 
     // step 3
-    randombytes(salt, MIRATH_SECURITY_BYTES);
+    randombytes(salt, MIRATH_PARAM_SALT_BYTES);
 
     // Phase 1: Sharing and commitments
     // step 4
@@ -251,15 +251,15 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
 
     // step 5
     mirath_tree_init(&tree);
-    memcpy(&salt, salt_and_rseed, MIRATH_SECURITY_BYTES);                                 // salt
-    memcpy(tree.nodes[0], &salt_and_rseed[MIRATH_SECURITY_BYTES], MIRATH_SECURITY_BYTES); // root seed
+    memcpy(&salt, salt_and_rseed, MIRATH_PARAM_SALT_BYTES);                                 // salt
+    memcpy(tree.nodes[0], &salt_and_rseed[MIRATH_PARAM_SALT_BYTES], MIRATH_SECURITY_BYTES); // root seed
     tree.nonempty[0] = 1;
     mirath_tree_prg(&tree, salt, 0);
     mirath_tree_get_leaves(seeds, &tree);
 
     // step 6 and 7
     hash_init(&hash_ctx);
-    hash_update(hash_ctx, salt, 2 * MIRATH_SECURITY_BYTES);
+    hash_update(hash_ctx, salt, MIRATH_PARAM_SALT_BYTES);
     hash_update(hash_ctx, h_com, 2 * MIRATH_SECURITY_BYTES);
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
@@ -315,7 +315,7 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     // step 10 adn 11
     hash_init(&hash_ctx);
     hash_update(hash_ctx, msg, msg_len);
-    hash_update(hash_ctx, salt, 2 * MIRATH_SECURITY_BYTES);
+    hash_update(hash_ctx, salt, MIRATH_PARAM_SALT_BYTES);
     hash_update(hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
@@ -343,7 +343,7 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
 
 int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_msg_len, uint8_t *pk) {
     seed_t seed_pk;
-    uint8_t salt[16];
+    uint8_t salt[MIRATH_PARAM_SALT_BYTES];
 
     hash_t hash1;
     hash_t hash2_partial;
@@ -385,7 +385,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
 
     // step 6, and 7
     hash_init(&hash_ctx);
-    hash_update(hash_ctx, salt, 16);
+    hash_update(hash_ctx, salt, MIRATH_PARAM_SALT_BYTES);
     hash_update(hash_ctx, h_com, 2 * MIRATH_SECURITY_BYTES);
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
@@ -405,7 +405,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
     // step 10 and 11
     hash_init(&hash_ctx);
     hash_update(hash_ctx, msg, *msg_len);
-    hash_update(hash_ctx, salt, 16);
+    hash_update(hash_ctx, salt, MIRATH_PARAM_SALT_BYTES);
     hash_update(hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
