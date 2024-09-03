@@ -10,6 +10,8 @@ typedef uint8_t mirath_tcith_commit_t[2 * MIRATH_SECURITY_BYTES];
 typedef mirath_tcith_commit_t mirath_tcith_commit_1_t[MIRATH_PARAM_TAU_1][MIRATH_PARAM_N_1];
 typedef mirath_tcith_commit_t mirath_tcith_commit_2_t[MIRATH_PARAM_TAU_2][MIRATH_PARAM_N_2];
 
+typedef uint16_t mirath_tcith_challenge_t[MIRATH_PARAM_TAU];
+
 void mirath_tcith_commit_set_as_a_grid_list(mirath_tcith_commit_t *seeds[MIRATH_PARAM_TAU],
                                             mirath_tcith_commit_1_t *input_1,
                                             mirath_tcith_commit_2_t *input_2);
@@ -48,5 +50,13 @@ void emulateparty_mu(ff_mu_t base_alpha[MIRATH_PARAM_RHO], const ff_mu_t p,
                      const ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)],
                      const ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)],
                      const ff_mu_t mid_alpha[MIRATH_PARAM_RHO]);
+
+
+void mirath_tcith_compute_challenge_2(mirath_tcith_challenge_t challenge, const uint8_t *seed_input, const uint8_t *salt);
+uint8_t mirath_tcith_discard_input_challenge_2(const uint8_t *seed_input);
+
+#define mirath_tcith_shift_to_right(shiftOut, highIn, lowIn, shift, DigitSize)  \
+    (shiftOut) = ((lowIn) >> (shift)) ^ ((highIn) << ((DigitSize) - (shift)));
+void mirath_tcith_shift_to_right_array(uint8_t *string, size_t length);
 
 #endif //MIRATH_TCITH_H

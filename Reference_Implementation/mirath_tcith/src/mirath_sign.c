@@ -75,6 +75,8 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     mirath_tcith_commit_1_t commits_1 = {0};
     mirath_tcith_commit_2_t commits_2 = {0};
     mirath_tcith_commit_set_as_a_grid_list(commits, &commits_1, &commits_2);
+    
+    uint8_t path[MIRATH_PARAM_TREE_LEAVES * MIRATH_SECURITY_BYTES] = {0};
 
     hash_t hash1;
     hash_t hash2_partial;
@@ -148,9 +150,41 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     hash_finalize(hash_ctx, hash2_partial);
 
     // Phase 4: Second challenge (view opening)
-    // step from 13 to 20
-    uint8_t ctr;
-    ctr = 0;
+//     uint64_t ctr = 0;
+// retry:
+//     // Initialize hash_ctx
+//     hash_init(&hash_ctx);
+//     // Add m, pk, salt and h1 to hash_ctx
+//     uint8_t domain_separator = DOMAIN_SEPARATOR_HASH2;
+//     hash_update(&hash_ctx, &domain_separator, sizeof(uint8_t));
+//     hash_update(&hash_ctx, m_digest, 2 * MIRATH_SECURITY_BYTES); // append has of the message for efficiency we should take as input messsage its digest (same for the any hashing taking as input the message)
+//     hash_update(&hash_ctx, pk, MIRATH_PUBLIC_KEY_BYTES); // append public key
+//     hash_update(&hash_ctx, salt, 2 * MIRATH_SECURITY_BYTES);
+//     hash_update(&hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
+//     for(size_t e = 0; e < MIRATH_PARAM_TAU; e++) {
+//         hash_update(&hash_ctx, base_a_str[e], MIRATH_VEC_RHO_BYTES);
+//         hash_update(&hash_ctx, mid_a_str[e], MIRATH_VEC_RHO_BYTES);
+//     }
+//     hash_update(&hash_ctx, (uint8_t *)&ctr, sizeof(uint64_t));
+//     hash_finalize(hash2, &hash_ctx);
+//     if (mirath_tcith_discard_input_challenge_2(hash2)) {
+//         ctr += 1;
+//         goto retry;
+//     }
+
+//     mirath_tcith_compute_challenge_2(i_star, hash2, salt);
+//     // Next we map the challenges to the leaves position (GGM Tree optimization)
+//     for(size_t e = 0; e < MIRATH_PARAM_TAU; e++){
+//         size_t i = i_star[e]; // We need to store the i_star computed in the emulateMPC_mu call
+//         psi_i_star[e] = mirath_tcith_psi(i, e); // we need to store their respectively image under psi
+//     }
+
+//     size_t path_length = mirath_tree_get_sibling_path(path, &tree, psi_i_star, MIRATH_PARAM_TAU);
+//     if (path_length > MIRATH_PARAM_T_OPEN) {
+//         ctr += 1;
+//         memset(path, 0, path_length * MIRATH_SECURITY_BYTES);
+//         goto retry;
+//     }
 
     // Phase 5: Signature
     // step 21

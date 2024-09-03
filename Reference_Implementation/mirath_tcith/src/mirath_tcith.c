@@ -284,3 +284,78 @@ void emulateparty_mu(ff_mu_t base_alpha[MIRATH_PARAM_RHO], const ff_mu_t p,
     // share_alpha - mid_alpha * p
     mirath_vector_ff_mu_add_multiple(base_alpha, base_alpha, p, mid_alpha, MIRATH_PARAM_RHO);
 }
+
+/**
+* \fn void mirath_tcith_shift_to_left_array(uint8_t *inout_a, size_t length)
+* \brief This function performs a shift to right of the input.
+*
+* \param[in/out] inout_a uint8_t* Representation of a byte string
+* \param[in] length size_t Representation of the byte string length
+*/
+void mirath_tcith_shift_to_right_array(uint8_t *string, size_t length) {
+    for(size_t i = 0; i < length - 1; i++) {
+        mirath_tcith_shift_to_right(string[i], string[i + 1], string[i], 1, 8);
+    }
+    string[length - 1] >>= 1;
+}
+
+/**
+* \fn void mirath_tcith_compute_challenge_2(mirath_tcith_challenge_t challenge, const uint8_t *seed_input, const uint8_t *salt)
+* \brief This function generates the second challenges from an input seed
+*
+* \param[out] challenge mirath_tcith_challenge_t Representation of challenge
+* \param[in] seed_input String containing the input seed
+* \param[in] salt String containing the salt
+*/
+void mirath_tcith_compute_challenge_2(mirath_tcith_challenge_t challenge, const uint8_t *seed_input, const uint8_t *salt) {
+    uint8_t random[MIRATH_PARAM_CHALLENGE_2_BYTES] = {0}, mask = 0x00;
+    // Use shake as a seed expander. Shake should be initialized with (seed_input || salt) Take into acccount that we assume 2 * MIRATH_SECURITY_BYTES for both seed_input and salt
+
+    memset(challenge, 0, sizeof(mirath_tcith_challenge_t));
+    // We want to generate MIRATH_PARAM_CHALLENGE_2_BYTES random bytes and store them in random
+
+    // Challenges concerning N_1
+    mask = MIRATH_PARAM_N_1_MASK;
+    for(size_t i = 0; i < MIRATH_PARAM_TAU_1; i++) {
+        uint8_t block[MIRATH_PARAM_N_1_BYTES] = {0};
+        memcpy(block, random, MIRATH_PARAM_N_1_BYTES);
+        block[MIRATH_PARAM_N_1_BYTES - 1] &= mask;
+        memcpy((uint8_t *)&challenge[i], block, MIRATH_PARAM_N_1_BYTES);
+        // Left shift bits: starts
+        for (size_t j = 0; j < MIRATH_PARAM_N_1_BITS; j++) {
+            mirath_tcith_shift_to_right_array(random, MIRATH_PARAM_CHALLENGE_2_BYTES);
+        }
+        // Left shift bits: ends
+    }
+
+    // Challenges concerning N_2
+    mask = MIRATH_PARAM_N_2_MASK;
+    for(size_t i = 0; i < MIRATH_PARAM_TAU_2; i++) {
+        uint8_t block[MIRATH_PARAM_N_2_BYTES] = {0};
+        memcpy(block, random, MIRATH_PARAM_N_2_BYTES);
+        block[MIRATH_PARAM_N_2_BYTES - 1] &= mask;
+        memcpy((uint8_t *)&challenge[i + MIRATH_PARAM_TAU_1], block, MIRATH_PARAM_N_2_BYTES);
+        // Left shift bits: starts
+        for (size_t j = 0; j < MIRATH_PARAM_N_2_BITS; j++) {
+            mirath_tcith_shift_to_right_array(random, MIRATH_PARAM_CHALLENGE_2_BYTES);
+        }
+        // Left shift bits: ends
+    }
+}
+
+/**
+* \fn uint8_t mirath_tcith_discard_input_challenge_2(const uint8_t *seed_input)
+* \brief This function determines if the w most significant bits of the input are zero.
+*
+* \param[in] seed_input String containing the input seed
+*/
+uint8_t mirath_tcith_discard_input_challenge_2(const uint8_t *seed_input) {
+    uint8_t output = 0x00;
+    uint8_t mask = MIRATH_PARAM_HASH_2_MASK;
+    for(size_t i = 0; i < MIRATH_PARAM_HASH_2_MASK_BYTES; i++) {
+        output |= (uint8_t)((seed_input[i] & mask) != 0);
+        mask = 0xFF;
+    }
+
+    return output;
+}
