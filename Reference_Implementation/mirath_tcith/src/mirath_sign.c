@@ -228,7 +228,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
         ff_mu_t base_alpha[MIRATH_PARAM_RHO];
 
-        emulateparty_mu(base_alpha, phi_table_ff_mu[i_star[e]], share_S[e], share_C[e], share_v[e], gamma, H, y, mid_alpha[e]);
+        emulateparty_mu(base_alpha, i_star[e], share_S[e], share_C[e], share_v[e], gamma, H, y, mid_alpha[e]);
 
         hash_update(hash_ctx, base_alpha, sizeof(ff_mu_t) * (MIRATH_PARAM_M * (MIRATH_PARAM_N - MIRATH_PARAM_R)));
         hash_update(hash_ctx, mid_alpha[e], sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
