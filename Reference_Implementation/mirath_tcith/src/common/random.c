@@ -41,7 +41,7 @@ void randombytes(uint8_t *target, size_t length)
     {
         hash_t salt = {0};
 
-        mirath_prng_init(&prng_singleton, salt, NULL);
+        mirath_prng_init(&prng_singleton, salt, NULL, 0);
         
         prng_singleton_up = 1;
     }

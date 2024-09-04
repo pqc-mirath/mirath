@@ -10,6 +10,40 @@
 #include "mirath_matrix_ff.h"
 #include "mirath_tcith.h"
 #include "mirath_tree.h"
+#include "parsing.h"
+
+void mirath_tcith_internal_steps_pk(ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)],
+                                     const ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)],
+                                     const ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)],
+                                     const ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)]) {
+    ff_t *e_A;
+    ff_t *e_B;
+
+    ff_t T[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, (MIRATH_PARAM_N - MIRATH_PARAM_R))];
+    ff_t E[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_N)];
+
+    mirath_matrix_ff_product(T, S, C, MIRATH_PARAM_M, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    mirath_matrix_ff_horizontal_concat(E, S, T, MIRATH_PARAM_M, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+
+    e_A = E;
+    e_B = E + mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+    mirath_matrix_ff_product(y, H, e_B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K, 1);
+
+    mirath_vec_ff_add_arith(y, y, e_A, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+}
+
+void mirath_tciht_compute_public_key(uint8_t *pk, const uint8_t *sk,
+                                     const ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)],
+                                     const ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)],
+                                     const ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)]) {
+
+    ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
+
+    mirath_tcith_internal_steps_pk(y, S, C, H);
+
+    unparse_public_key(pk, sk + MIRATH_SECURITY_BYTES, y);
+}
 
 void mirath_tcith_commit_set_as_a_grid_list(mirath_tcith_commit_t *seeds[MIRATH_PARAM_TAU],
                                             mirath_tcith_commit_1_t *input_1,
@@ -33,7 +67,7 @@ void mirath_tcith_commit(mirath_tcith_commit_t commit, const uint8_t *salt, uint
     hash_update(ctx, (uint8_t *)&e, sizeof(uint16_t));
     hash_update(ctx, (uint8_t *)&i, sizeof(uint16_t));
     hash_update(ctx, seed, MIRATH_SECURITY_BYTES);
-    hash_finalize(ctx, commit);
+    hash_finalize(commit, ctx);
 }
 
 size_t mirath_tcith_psi(size_t i, size_t e) {
@@ -79,7 +113,7 @@ void build_sharing_N(ff_t aux[MIRATH_PARAM_TAU][mirath_matrix_ff_bytes_size(MIRA
             mirath_tcith_commit(commits[k], salt, e, i, seeds[idx]);
             k++;
 
-            mirath_prng_init(&prng, NULL, seeds[idx]);
+            mirath_prng_init(&prng, NULL, seeds[idx], MIRATH_SECURITY_BYTES);
 
             mirath_matrix_ff_init_random(Si, MIRATH_PARAM_M, MIRATH_PARAM_R, &prng);
             mirath_matrix_ff_init_random(Ci, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R, &prng);
@@ -103,11 +137,14 @@ void build_sharing_N(ff_t aux[MIRATH_PARAM_TAU][mirath_matrix_ff_bytes_size(MIRA
         mirath_matrix_ff_add(aux[e] + n_bytes, C, acc_share_C, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
     }
 
+    const uint8_t domain_separator = DOMAIN_SEPARATOR_COMMITMENT;
+
     hash_t h_com;
     hash_ctx_t hash_commits;
     hash_init(&hash_commits);
+    hash_update(hash_ctx, &domain_separator, sizeof(uint8_t));
     hash_update(hash_commits, (uint8_t *)commits, sizeof(mirath_tcith_commit_t) * (MIRATH_PARAM_TAU * (MIRATH_PARAM_N_1 + MIRATH_PARAM_N_2)));
-    hash_finalize(hash_commits, h_com);
+    hash_finalize(h_com, hash_commits);
 
     hash_update(hash_ctx, h_com, 2 * MIRATH_SECURITY_BYTES);
 
@@ -143,7 +180,7 @@ void compute_share(ff_mu_t share_S[MIRATH_PARAM_TAU][MIRATH_PARAM_M * MIRATH_PAR
 
                 const uint32_t idx = mirath_tcith_psi((size_t)i, (size_t)e);
 
-                mirath_prng_init(&prng, NULL, seeds[idx]);
+                mirath_prng_init(&prng, NULL, seeds[idx], MIRATH_SECURITY_BYTES);
 
                 mirath_matrix_ff_init_random(Si, MIRATH_PARAM_M, MIRATH_PARAM_R, &prng);
                 mirath_matrix_ff_init_random(Ci, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R, &prng);
@@ -308,11 +345,15 @@ void mirath_tcith_shift_to_right_array(uint8_t *string, size_t length) {
 * \param[in] salt String containing the salt
 */
 void mirath_tcith_compute_challenge_2(mirath_tcith_challenge_t challenge, const uint8_t *seed_input, const uint8_t *salt) {
-    uint8_t random[MIRATH_PARAM_CHALLENGE_2_BYTES] = {0}, mask = 0x00;
-    // Use shake as a seed expander. Shake should be initialized with (seed_input || salt) Take into acccount that we assume 2 * MIRATH_SECURITY_BYTES for both seed_input and salt
+    uint8_t random[MIRATH_PARAM_CHALLENGE_2_BYTES] = {0}, mask;
+
+    mirath_prng_t prng;
+    mirath_prng_init(&prng, salt, seed_input, 2 * MIRATH_SECURITY_BYTES); // seed is the double size
 
     memset(challenge, 0, sizeof(mirath_tcith_challenge_t));
-    // We want to generate MIRATH_PARAM_CHALLENGE_2_BYTES random bytes and store them in random
+
+    // generate MIRATH_PARAM_CHALLENGE_2_BYTES random bytes and store them in random
+    mirath_prng(&prng, random, MIRATH_PARAM_CHALLENGE_2_BYTES);
 
     // Challenges concerning N_1
     mask = MIRATH_PARAM_N_1_MASK;

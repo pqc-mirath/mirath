@@ -32,7 +32,7 @@ void parse_secret_key(ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_
     // secret seed
     memcpy(seed, sk, MIRATH_SECURITY_BYTES);
 
-    mirath_prng_init(&prng, NULL, seed);
+    mirath_prng_init(&prng, NULL, seed, MIRATH_SECURITY_BYTES);
     // TODO: use pointers in the optimized version
     ff_t T[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R) + mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)];
     mirath_prng(&prng, T, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R) + mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R));
@@ -44,7 +44,7 @@ void parse_secret_key(ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_
 
     // public seed
     memcpy(seed, sk + MIRATH_SECURITY_BYTES, MIRATH_SECURITY_BYTES);
-    mirath_prng_init(&prng, NULL, seed);
+    mirath_prng_init(&prng, NULL, seed, MIRATH_SECURITY_BYTES);
     mirath_prng(&prng, H, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K));
 
     mirath_matrix_set_to_ff(H, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K);

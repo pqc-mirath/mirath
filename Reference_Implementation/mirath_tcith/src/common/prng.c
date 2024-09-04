@@ -3,9 +3,10 @@
 
 // NOTE: this is only a skeleton
 
-void mirath_prng_init(mirath_prng_t *prng, const hash_t salt, const seed_t seed) {
-    uint8_t input[3 * MIRATH_SECURITY_BYTES];
-    memset(input, 0, 3 * MIRATH_SECURITY_BYTES);
+// Agregar el tamaño de la semilla 2 * lambda como parametro de entrada
+void mirath_prng_init(mirath_prng_t *prng, const hash_t salt, const seed_t seed, const uint32_t seed_size_bytes) {
+    uint8_t input[2 * MIRATH_SECURITY_BYTES + seed_size_bytes];
+    memset(input, 0, 2 * MIRATH_SECURITY_BYTES + seed_size_bytes);
 	
 	// NOTE: generalize this in the case of CAT 3 and 5
     mirath_fips202_ref_shake128_init(prng);
@@ -16,10 +17,10 @@ void mirath_prng_init(mirath_prng_t *prng, const hash_t salt, const seed_t seed)
     }
 
     if (seed != NULL){
-        memcpy(input + 2 * MIRATH_SECURITY_BYTES, seed, MIRATH_SECURITY_BYTES);
+        memcpy(input + 2 * MIRATH_SECURITY_BYTES, seed, seed_size_bytes);
     }
 
-    mirath_fips202_ref_shake128_absorb(prng, input, 3 * MIRATH_SECURITY_BYTES);
+    mirath_fips202_ref_shake128_absorb(prng, input, 2 * MIRATH_SECURITY_BYTES + seed_size_bytes);
     shake128_finalize(prng);
 }
 

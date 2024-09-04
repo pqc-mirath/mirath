@@ -30,6 +30,9 @@
 #define MIRATH_PARAM_R 8
 #define MIRATH_N_PARTIES 256
 
+// TODO set the correct value
+#define MIRATH_PUBLIC_KEY_BYTES 128
+
 #define MIRATH_PARAM_TREE_NODES 7167		/**< Number of nodes in the tree */
 #define MIRATH_PARAM_TREE_LEAVES 3072	    /**< Number of leaves in the tree */
 #define MIRATH_PARAM_TREE_DEPTH 12		    /**< Depth of the tree */
@@ -41,9 +44,10 @@
 
 #define DOMAIN_SEPARATOR_MESSAGE 0
 #define DOMAIN_SEPARATOR_HASH1 1
-#define DOMAIN_SEPARATOR_HASH2 2
-#define DOMAIN_SEPARATOR_TREE 3
-#define DOMAIN_SEPARATOR_COMMITMENT 4
+#define DOMAIN_SEPARATOR_HASH2_PARTIAL 2
+#define DOMAIN_SEPARATOR_HASH2 3
+#define DOMAIN_SEPARATOR_TREE 4
+#define DOMAIN_SEPARATOR_COMMITMENT 5
 
 #endif
 

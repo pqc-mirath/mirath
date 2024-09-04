@@ -306,7 +306,7 @@ int test_vector_ff_mu(mirath_prng_t prng) {
 
 int main(int argc, char **argv) {
     mirath_prng_t prng;
-    mirath_prng_init(&prng, NULL, NULL);
+    mirath_prng_init(&prng, NULL, NULL, 0);
 
     tests_ff(prng);
 

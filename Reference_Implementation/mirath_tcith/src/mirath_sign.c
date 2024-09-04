@@ -19,11 +19,8 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
     ff_t *C;
     ff_t SC[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R) + mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)];
     ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)];
-    ff_t *e_A;
-    ff_t *e_B;
 
-    ff_t T[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, (MIRATH_PARAM_N - MIRATH_PARAM_R))];
-    ff_t E[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_N)];
+    ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
 
     // step 1
     randombytes(seed_sk, MIRATH_SECURITY_BYTES);
@@ -31,7 +28,7 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
     randombytes(seed_pk, MIRATH_SECURITY_BYTES);
 
     // step 3
-    mirath_prng_init(&prng, NULL, seed_sk);
+    mirath_prng_init(&prng, NULL, seed_sk, MIRATH_SECURITY_BYTES);
     mirath_prng(&prng, SC, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R) + mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R));
     S = SC;
     C = SC + mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R);
@@ -39,23 +36,11 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
     mirath_matrix_set_to_ff(C, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
 
     // step 4
-    mirath_prng_init(&prng, NULL, seed_pk);
+    mirath_prng_init(&prng, NULL, seed_pk, MIRATH_SECURITY_BYTES);
     mirath_matrix_ff_init_random(H, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K, &prng);
 
-    // step 5
-    mirath_matrix_ff_product(T, S, C, MIRATH_PARAM_M, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
-    mirath_matrix_ff_horizontal_concat(E, S, T, MIRATH_PARAM_M, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
-
-    // step 6
-    // SplitCodeword(Flatten(E))
-    e_A = E;
-    e_B = E + mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
-
-    // step 7
-    ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
-    mirath_matrix_ff_product(y, H, e_B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K, 1);
-
-    mirath_vec_ff_add_arith(y, y, e_A, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+    // step 5, 6 and 7
+    mirath_tcith_internal_steps_pk(y, S, C, H);
 
     // step 8
     unparse_public_key(pk, seed_pk, y);
@@ -84,11 +69,15 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
 
     hash_ctx_t hash_ctx;
 
+    uint8_t domain_separator;
+
     mirath_prng_t prng;
 
     ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)];
     ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)];
     ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)];
+
+    uint8_t pk[MIRATH_PUBLIC_KEY_BYTES];
 
     ff_mu_t gamma[MIRATH_PARAM_RHO * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)];
     ff_mu_t v[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO];
@@ -102,6 +91,7 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     // Phase 0: Initialization
     // step 1 and 2
     parse_secret_key(S, C, H, sk);
+    mirath_tciht_compute_public_key(pk, sk, S, C, H);
 
     // step 3
     randombytes(salt, MIRATH_PARAM_SALT_BYTES);
@@ -117,22 +107,28 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     mirath_tree_prg(&tree, salt, 0);
     mirath_tree_get_leaves(seeds, &tree);
 
+    domain_separator = DOMAIN_SEPARATOR_HASH1;
+
     hash_init(&hash_ctx);
+    hash_update(hash_ctx, &domain_separator, sizeof(uint8_t));
     hash_update(hash_ctx, salt, MIRATH_PARAM_SALT_BYTES);
 
     build_sharing_N(aux, rnd_S, rnd_C, rnd_v, hash_ctx, seeds, S, C, salt);
 
     // Phase 2: First challenge (MPC challenge)
     // step 8
-    hash_finalize(hash_ctx, hash1);
+    hash_finalize(hash1, hash_ctx);
 
     // step 9
-    mirath_prng_init(&prng, hash1, NULL);
+    mirath_prng_init(&prng, hash1, NULL, 0);
     mirath_prng(&prng, gamma, sizeof(ff_mu_t) * (MIRATH_PARAM_RHO * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)));
+
+    domain_separator = DOMAIN_SEPARATOR_HASH2_PARTIAL;
 
     // Phase 3: MPC simulation
     // step 10 adn 11
     hash_init(&hash_ctx);
+    hash_update(hash_ctx, &domain_separator, sizeof(uint8_t));
     hash_update(hash_ctx, msg, msg_len);
     hash_update(hash_ctx, salt, MIRATH_PARAM_SALT_BYTES);
     hash_update(hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
@@ -147,44 +143,39 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     }
 
     // step 12
-    hash_finalize(hash_ctx, hash2_partial);
+    hash_finalize(hash2_partial, hash_ctx);
 
+    mirath_tcith_challenge_t i_star;
+    uint16_t psi_i_star[MIRATH_PARAM_TAU];
     // Phase 4: Second challenge (view opening)
-//     uint64_t ctr = 0;
-// retry:
-//     // Initialize hash_ctx
-//     hash_init(&hash_ctx);
-//     // Add m, pk, salt and h1 to hash_ctx
-//     uint8_t domain_separator = DOMAIN_SEPARATOR_HASH2;
-//     hash_update(&hash_ctx, &domain_separator, sizeof(uint8_t));
-//     hash_update(&hash_ctx, m_digest, 2 * MIRATH_SECURITY_BYTES); // append has of the message for efficiency we should take as input messsage its digest (same for the any hashing taking as input the message)
-//     hash_update(&hash_ctx, pk, MIRATH_PUBLIC_KEY_BYTES); // append public key
-//     hash_update(&hash_ctx, salt, 2 * MIRATH_SECURITY_BYTES);
-//     hash_update(&hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
-//     for(size_t e = 0; e < MIRATH_PARAM_TAU; e++) {
-//         hash_update(&hash_ctx, base_a_str[e], MIRATH_VEC_RHO_BYTES);
-//         hash_update(&hash_ctx, mid_a_str[e], MIRATH_VEC_RHO_BYTES);
-//     }
-//     hash_update(&hash_ctx, (uint8_t *)&ctr, sizeof(uint64_t));
-//     hash_finalize(hash2, &hash_ctx);
-//     if (mirath_tcith_discard_input_challenge_2(hash2)) {
-//         ctr += 1;
-//         goto retry;
-//     }
+    uint16_t ctr = 0;
+ retry:
+     // Initialize hash_ctx
+     hash_init(&hash_ctx);
+     domain_separator = DOMAIN_SEPARATOR_HASH2;
+     hash_update(hash_ctx, &domain_separator, sizeof(uint8_t));
+     hash_update(hash_ctx, (uint8_t *)&ctr, sizeof(uint16_t));
+     hash_update(hash_ctx, pk, MIRATH_PUBLIC_KEY_BYTES);
+     hash_finalize(hash2, hash_ctx);
 
-//     mirath_tcith_compute_challenge_2(i_star, hash2, salt);
-//     // Next we map the challenges to the leaves position (GGM Tree optimization)
-//     for(size_t e = 0; e < MIRATH_PARAM_TAU; e++){
-//         size_t i = i_star[e]; // We need to store the i_star computed in the emulateMPC_mu call
-//         psi_i_star[e] = mirath_tcith_psi(i, e); // we need to store their respectively image under psi
-//     }
+     if (mirath_tcith_discard_input_challenge_2(hash2)) {
+         ctr += 1;
+         goto retry;
+     }
 
-//     size_t path_length = mirath_tree_get_sibling_path(path, &tree, psi_i_star, MIRATH_PARAM_TAU);
-//     if (path_length > MIRATH_PARAM_T_OPEN) {
-//         ctr += 1;
-//         memset(path, 0, path_length * MIRATH_SECURITY_BYTES);
-//         goto retry;
-//     }
+     mirath_tcith_compute_challenge_2(i_star, hash2, salt);
+     // Next we map the challenges to the leaves position (GGM Tree optimization)
+     for(size_t e = 0; e < MIRATH_PARAM_TAU; e++){
+         size_t i = i_star[e];
+         psi_i_star[e] = (uint16_t)mirath_tcith_psi(i, e); // store their respectively image under psi
+     }
+
+     size_t path_length = mirath_tree_get_sibling_path(path, &tree, psi_i_star, MIRATH_PARAM_TAU);
+     if (path_length > MIRATH_PARAM_T_OPEN) {
+         ctr += 1;
+         memset(path, 0, sizeof(path_length) * MIRATH_SECURITY_BYTES);
+         goto retry;
+     }
 
     // Phase 5: Signature
     // step 21
@@ -226,7 +217,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
     // step 2
 
     // step 3
-    mirath_prng_init(&prng, NULL, seed_pk);
+    mirath_prng_init(&prng, NULL, seed_pk, MIRATH_SECURITY_BYTES);
     mirath_matrix_ff_init_random(H, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K, &prng);
 
     // step 4
@@ -246,10 +237,10 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
     }
 
     // step 8
-    hash_finalize(hash_ctx, hash1);
+    hash_finalize(hash1, hash_ctx);
 
     // step 9
-    mirath_prng_init(&prng, hash1, NULL);
+    mirath_prng_init(&prng, hash1, NULL, 0);
     mirath_prng(&prng, gamma, sizeof(ff_mu_t) * (MIRATH_PARAM_RHO * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)));
 
     // Phase 2: MPC simulation
@@ -270,13 +261,13 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
 
     // Phase 3: Verification
     // step 12
-    hash_finalize(hash_ctx, hash2_partial);
+    hash_finalize(hash2_partial, hash_ctx);
 
     // step 12
     hash_init(&hash_ctx);
     hash_update(hash_ctx, &ctr, sizeof(ctr));
     hash_update(hash_ctx, hash2_partial, 2 * MIRATH_SECURITY_BYTES);
-    hash_finalize(hash_ctx, hash2_computed);
+    hash_finalize(hash2_computed, hash_ctx);
 
     if (hash_equal(hash2, hash2_computed)) {
         return 0;

@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     // Initialize
     uint8_t salt[2 * MIRATH_SECURITY_BYTES] = {0};
     mirath_prng_t prng;
-    mirath_prng_init(&prng, NULL, NULL);
+    mirath_prng_init(&prng, NULL, NULL, 0);
     mirath_prng(&prng, salt, 2 * MIRATH_SECURITY_BYTES);
 
     printf("Testing mirath_tree: ");
