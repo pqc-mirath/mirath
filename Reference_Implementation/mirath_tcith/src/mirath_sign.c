@@ -180,6 +180,55 @@ int mirath_sign(uint8_t *sig_msg, size_t *sig_msg_len, uint8_t *msg, size_t msg_
     // Phase 5: Signature
     // step 21
 
+    // --------------------------------------------------------------------------------------------------------- Signature
+    // // se_str[] is the list of vectors aux_s
+    // // Ce_str[] is the list of matrix aux_C
+    // // mid_a_str[] is the list of vectors mid_alpha
+    // memcpy(&sig_msg[0], salt, 2 * MIRATH_SECURITY_BYTES);
+    // memcpy(&sig_msg[2 * MIRATH_SECURITY_BYTES], &ctr, sizeof(uint64_t));
+    // memcpy(&sig_msg[2 * MIRATH_SECURITY_BYTES + sizeof(uint64_t)], h2, 2 * MIRATH_SECURITY_BYTES);
+    // memcpy(&sig_msg[4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t)], path, MIRATH_SECURITY_BYTES * MIRATH_PARAM_T_OPEN);
+
+    // for(size_t e = 0; e < MIRATH_PARAM_TAU; e++) {
+    //     // Vector s
+    //     memcpy(&sig_msg[
+    //             4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t) + MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES +
+    //             e * (MIRATH_VEC_R_BYTES + MIRATH_MAT_BYTES + MIRATH_VEC_RHO_BYTES + 2 * MIRATH_SECURITY_BYTES)
+    //             ],
+    //             se_str[e],
+    //             MIRATH_VEC_R_BYTES);
+
+    //     // Matrix C
+    //     memcpy(&sig_msg[
+    //             4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t) + MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES +
+    //             e * (MIRATH_VEC_R_BYTES + MIRATH_MAT_FQ_BYTES + MIRATH_VEC_RHO_BYTES + 2 * MIRATH_SECURITY_BYTES) +
+    //             MIRATH_VEC_R_BYTES
+    //             ],
+    //             Ce_str[e],
+    //             MIRATH_MAT_FQ_BYTES);
+
+    //     // mid_a
+    //     memcpy(&sig_msg[
+    //             4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t) + MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES +
+    //             e * (MIRATH_VEC_R_BYTES + MIRATH_MAT_FQ_BYTES + MIRATH_VEC_RHO_BYTES + 2 * MIRATH_SECURITY_BYTES) +
+    //             MIRATH_VEC_R_BYTES +
+    //             MIRATH_MAT_FQ_BYTES
+    //             ],
+    //             mid_a_str[e],
+    //             MIRATH_VEC_RHO_BYTES);
+
+    //     // Commitment concerning the hidden seed
+    //     memcpy(&sig_msg[
+    //             4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t) + MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES +
+    //             e * (MIRATH_VEC_R_BYTES + MIRATH_MAT_FQ_BYTES + MIRATH_VEC_RHO_BYTES + 2 * MIRATH_SECURITY_BYTES) +
+    //             MIRATH_VEC_R_BYTES +
+    //             MIRATH_MAT_FQ_BYTES +
+    //             MIRATH_VEC_RHO_BYTES
+    //             ],
+    //             commits[e][i_star[e]],
+    //             2 * MIRATH_SECURITY_BYTES);
+    // }
+
     return 0;
 }
 
