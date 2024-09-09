@@ -271,7 +271,111 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
 
     // step 4
 
+    // // Parse signature data
+    // memcpy(salt, &signature[0], 2 * MIRATH_SECURITY_BYTES);
+    // memcpy(&ctr, &signature[2 * MIRATH_SECURITY_BYTES], sizeof(uint64_t));
+    // memcpy(h2,   &signature[2 * MIRATH_SECURITY_BYTES + sizeof(uint64_t)], 2 * MIRATH_SECURITY_BYTES);
+    // memcpy(path, &signature[4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t)], MIRATH_SECURITY_BYTES * MIRATH_PARAM_T_OPEN);
+
+    // mirath_tcith_compute_challenge_2(i_star, h2, salt);
+    // // Next we map the challenges to the leaves position (GGM Tree optimization)
+    // for(size_t e = 0; e < MIRATH_PARAM_TAU; e++){
+    //     size_t i = i_star[e];
+    //     psi_i_star[e] = mirath_tcith_psi(i, e);
+    // }
+
+    // // Get sibling path length: starts
+    // size_t path_length = 0;
+    // for(size_t i = 0; i < MIRATH_PARAM_T_OPEN; i++) {
+    //     uint8_t zero[MIRATH_SECURITY_BYTES] = {0};
+    //     if (memcmp(zero, &path[i * MIRATH_SECURITY_BYTES], MIRATH_SECURITY_BYTES) == 0) { continue; }
+    //     path_length += 1;
+    // }
+    // // Get sibling path length: ends
+
+    // mirath_tree_init(&tree);
+    // mirath_tree_get_seeds_from_path(&tree, psi_i_star, MIRATH_PARAM_TAU, path, path_length, salt, 0);
+    // mirath_tree_get_leaves(seeds, &tree);
+
+    // ++++++++
     // Phase 1: Recomputing shares and commitments
+    // for(size_t e = 0; e < MIRATH_PARAM_TAU; e++) {
+    //     // Set to zero the accumulator vector and matrix
+    //     vec_set_zero(shares.s[e], MIRATH_PARAM_R - 1);
+    //     mat_set_zero(shares.C[e], MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    //     vec_set_zero(shares.v[e], MIRATH_PARAM_RHO);
+
+    //     vec_set_zero(ss[e], MIRATH_PARAM_R - 1);
+    //     mat_fq_set_zero(Cs[e], MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    //     vec_set_zero(vs[e], MIRATH_PARAM_RHO);
+
+    //     rbc_elt phi_i_star;
+    //     mirath_tcith_phi(phi_i_star, i_star[e]);
+
+    //     size_t N = e < MIRATH_PARAM_TAU_1? MIRATH_PARAM_N_1 : MIRATH_PARAM_N_2;
+    //     for(size_t i = 0; i < N; i++) {
+    //         // Set to zero the accumulator vector and matrix
+    //         vec_set_zero(si, MIRATH_PARAM_R - 1);
+    //         mat_fq_set_zero(Ci, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    //         mat_set_zero(Di, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    //         vec_set_zero(vi, MIRATH_PARAM_RHO);
+
+    //         size_t idx = mirath_tcith_psi(i, e);
+    //         if (i == (size_t)i_star[e]) {
+    //             memcpy(commits[e][i],
+    //                     &signature[
+    //                     4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t) + MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES +
+    //                     e * (MIRATH_VEC_R_BYTES + MIRATH_MAT_FQ_BYTES + MIRATH_VEC_RHO_BYTES + 2 * MIRATH_SECURITY_BYTES) +
+    //                     MIRATH_VEC_R_BYTES +
+    //                     MIRATH_MAT_FQ_BYTES +
+    //                     MIRATH_VEC_RHO_BYTES
+    //                     ],
+    //                     2 * MIRATH_SECURITY_BYTES);
+    //             hash_update(ctx_h1, commits[e][i], 2 * MIRATH_SECURITY_BYTES);
+    //         } else {
+    //             // Compute commit and add it to ctx_h1
+    //             mirath_tcith_commit(commits[e][i], salt, e, i, seeds[idx]);
+    //             hash_update(ctx_h1, commits[e][i], 2 * MIRATH_SECURITY_BYTES);
+    //             mirath_tcith_share_sample(si, Ci, vi, seeds[idx], salt);
+
+    //             // Compute shares
+    //             // field element (ff_mu) phi_i;
+    //             mirath_tcith_phi(phi_i, i);
+    //             ff_mu_add(phi_i, phi_i_star, phi_i);
+
+    //             vec_scalar_mul(si, si, phi_i, MIRATH_PARAM_R - 1);
+    //             mat_fq_mul_by_constant(Di, Ci, phi_i, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    //             vec_scalar_mul(vi, vi, phi_i, MIRATH_PARAM_RHO);
+
+    //             vec_add(shares.s[e], shares.s[e], si, MIRATH_PARAM_R - 1);
+    //             mat_add(shares.C[e], shares.C[e], Di, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    //             vec_add(shares.v[e], shares.v[e], vi, MIRATH_PARAM_RHO);
+    //         }
+    //     }
+
+    //     // Operations concerning vector se
+    //     memcpy(se_str[e],
+    //             &signature[
+    //             4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t) + MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES +
+    //             e * (MIRATH_VEC_R_BYTES + MIRATH_MAT_FQ_BYTES + MIRATH_VEC_RHO_BYTES + 2 * MIRATH_SECURITY_BYTES)
+    //             ],
+    //             MIRATH_VEC_R_BYTES);
+    //     vec_from_string(si, MIRATH_PARAM_R - 1, se_str[e]);
+    //     vec_scalar_mul(si, si, phi_i_star, MIRATH_PARAM_R - 1);
+    //     vec_add(shares.s[e], shares.s[e], si, MIRATH_PARAM_R - 1);
+
+    //     // Operations concerning matrix Ce
+    //     memcpy(Ce_str[e],
+    //             &signature[
+    //             4 * MIRATH_SECURITY_BYTES + sizeof(uint64_t) + MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES +
+    //             e * (MIRATH_VEC_R_BYTES + MIRATH_MAT_FQ_BYTES + MIRATH_VEC_RHO_BYTES + 2 * MIRATH_SECURITY_BYTES) +
+    //             MIRATH_VEC_R_BYTES
+    //             ],
+    //             MIRATH_MAT_FQ_BYTES);
+    //     mat_fq_from_string(Ci, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R, Ce_str[e]);
+    //     mat_fq_mul_by_constant(Di, Ci, phi_i_star, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    //     mat_add(shares.C[e], shares.C[e], Di, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
+    // }
     // step 5
 
     // step 6, and 7
