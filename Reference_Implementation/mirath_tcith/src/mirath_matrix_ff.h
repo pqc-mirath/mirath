@@ -58,13 +58,13 @@ void mirath_matrix_ff_horizontal_split(ff_t *matrix1, ff_t *matrix2, const ff_t 
 /* Pack 'matrix' over 'dest (bytes) + bit_offset (bits)'.
  * Update 'dest' and 'bit_offset' for the next call of 'matrix_pack'.
  * If 'bit_offset == NULL', then an offset of 0 bits is used. */
-//void matrix_pack(uint8_t **dest, uint32_t *bit_offset, const ff_t *matrix,
-//    uint32_t n_rows, uint32_t n_cols);
+void mirath_matrix_ff_unparse(uint8_t **dest, uint32_t *bit_offset, const ff_t *matrix,
+    uint32_t n_rows, uint32_t n_cols);
 
 /* Unpack 'matrix' from 'source (bytes) + bit_offset (bits)'.
  * Update 'source' and 'bit_offset' for the next call of 'matrix_unpack'.
  * If 'bit_offset == NULL', then an offset of 0 bits is used. */
-//void matrix_unpack(ff_t *matrix, uint8_t **source, uint32_t *bit_offset,
-//    uint32_t n_rows, uint32_t n_cols);
+void mirath_matrix_ff_parse(ff_t *matrix, uint8_t **source, uint32_t *bit_offset,
+    uint32_t n_rows, uint32_t n_cols);
 
 #endif

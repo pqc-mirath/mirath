@@ -29,14 +29,21 @@ void mirath_tcith_commit_set_as_a_grid_list(mirath_tcith_commit_t *seeds[MIRATH_
 void mirath_tcith_commit(mirath_tcith_commit_t commit, const uint8_t *salt, uint16_t e, uint16_t i, const uint8_t *seed);
 size_t mirath_tcith_psi(size_t i, size_t e);
 
-void build_sharing_N(ff_t aux[MIRATH_PARAM_TAU][mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1)],
-                     ff_mu_t rnd_S[MIRATH_PARAM_TAU][MIRATH_PARAM_M * MIRATH_PARAM_R],
-                     ff_mu_t rnd_C[MIRATH_PARAM_TAU][MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R)],
-                     ff_mu_t rnd_v[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO], hash_ctx_t hash_ctx,
+void build_sharing_N(ff_t aux[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1)],
+                     ff_mu_t rnd_S[MIRATH_PARAM_M * MIRATH_PARAM_R],
+                     ff_mu_t rnd_C[MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R)],
+                     ff_mu_t rnd_v[MIRATH_PARAM_RHO], mirath_tcith_commit_t *commits[MIRATH_PARAM_TAU],
                      const mirath_tree_leaves_t seeds,
                      const ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)],
                      const ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)],
-                     const uint8_t salt[MIRATH_PARAM_SALT_BYTES]);
+                     const uint8_t salt[MIRATH_PARAM_SALT_BYTES], const uint32_t e);
+
+void compute_share(ff_mu_t share_S[MIRATH_PARAM_M * MIRATH_PARAM_R],
+                   ff_mu_t share_C[MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R)],
+                   ff_mu_t share_v[MIRATH_PARAM_RHO], mirath_tcith_commit_t *commits[MIRATH_PARAM_TAU],
+                   const uint32_t i_star, const mirath_tree_leaves_t seeds, const uint32_t e,
+                   const uint8_t salt[MIRATH_PARAM_SALT_BYTES], mirath_tcith_commit_t commits_i_star[MIRATH_PARAM_TAU],
+                   const ff_t aux[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1)]);
 
 void split_codeword_ff_mu(ff_mu_t e_A[MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K], ff_mu_t e_B[MIRATH_PARAM_K],
                           const ff_mu_t in_X[MIRATH_PARAM_M * MIRATH_PARAM_R],
