@@ -298,8 +298,6 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
 
         compute_share(share_S[e], share_C[e], share_v[e], commits, i_star[e], seeds, e, salt, commits_i_star, aux[e]);
 
-        hash_update(hash_ctx, aux[e], mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1));
-
         hash_update(hash_commits, (uint8_t *)commits[e], sizeof(mirath_tcith_commit_t) * N);
     }
 
