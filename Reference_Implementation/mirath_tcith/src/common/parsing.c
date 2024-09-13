@@ -85,7 +85,7 @@ void unparse_signature(uint8_t *signature, const uint8_t salt[MIRATH_PARAM_SALT_
         ptr += n_bytes;
 
         memcpy(ptr, mid_alpha[e], sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
-        ptr += MIRATH_PARAM_RHO;
+        ptr += sizeof(ff_mu_t) * MIRATH_PARAM_RHO;
     }
 }
 

@@ -12,12 +12,26 @@
 #include "mirath_tree.h"
 #include "parsing.h"
 
+/**
+* \fn void mirath_tcith_shift_to_left_array(uint8_t *inout_a, size_t length)
+* \brief This function performs a shift to right of the input.
+*
+* \param[in/out] inout_a uint8_t* Representation of a byte string
+* \param[in] length size_t Representation of the byte string length
+*/
+static inline void mirath_tcith_shift_to_right_array(uint8_t *string, const size_t length) {
+    for(size_t i = 0; i < length - 1; i++) {
+        mirath_tcith_shift_to_right(string[i], string[i + 1], string[i], 1, 8);
+    }
+    string[length - 1] >>= 1;
+}
+
 void mirath_tcith_internal_steps_pk(ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)],
                                      const ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)],
                                      const ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)],
                                      const ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)]) {
-    ff_t *e_A;
-    ff_t *e_B;
+    ff_t e_A[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)] = {0};
+    ff_t e_B[mirath_matrix_ff_bytes_size(MIRATH_PARAM_K, 1)] = {0};
 
     ff_t T[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, (MIRATH_PARAM_N - MIRATH_PARAM_R))];
     ff_t E[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_N)];
@@ -25,12 +39,27 @@ void mirath_tcith_internal_steps_pk(ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PA
     mirath_matrix_ff_product(T, S, C, MIRATH_PARAM_M, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
     mirath_matrix_ff_horizontal_concat(E, S, T, MIRATH_PARAM_M, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
 
-    e_A = E;
-    e_B = E + mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+    const uint32_t n_bytes_A = mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
+
+    memcpy(e_A, E, n_bytes_A);
+
+    if ((MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K) & 1u) {
+        const uint32_t n_bytes_B = mirath_matrix_ff_bytes_size(MIRATH_PARAM_K, 1);
+
+        e_A[n_bytes_A - 1] &= 0x0F;
+        memcpy(e_B, E + (n_bytes_A - 1), mirath_matrix_ff_bytes_size(MIRATH_PARAM_K, 1));
+
+        for (uint32_t i = 0; i < n_bytes_B - 1; i++) {
+            mirath_tcith_shift_to_right(e_B[i], e_B[i + 1], e_B[i], 4, 8);
+        }
+        e_B[n_bytes_B - 1] >>= 4;
+    } else {
+        memcpy(e_B, E + n_bytes_A, mirath_matrix_ff_bytes_size(MIRATH_PARAM_K, 1));
+    }
 
     mirath_matrix_ff_product(y, H, e_B, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K, 1);
 
-    mirath_vec_ff_add_arith(y, y, e_A, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
+    mirath_vec_ff_add_arith(y, y, e_A, n_bytes_A);
 }
 
 void mirath_tciht_compute_public_key(uint8_t *pk, const uint8_t *sk,
@@ -121,7 +150,7 @@ void build_sharing_N(ff_t aux[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRAT
 
         const ff_mu_t phi_i = (ff_mu_t)i;
         mirath_matrix_ff_mu_add_multiple_ff(rnd_S, phi_i, Si, MIRATH_PARAM_M, MIRATH_PARAM_R);
-        mirath_matrix_ff_mu_add_multiple_ff(rnd_C, phi_i, Ci, MIRATH_PARAM_M, MIRATH_PARAM_R);
+        mirath_matrix_ff_mu_add_multiple_ff(rnd_C, phi_i, Ci, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
         mirath_vector_ff_mu_add_multiple(rnd_v, rnd_v, phi_i, vi, MIRATH_PARAM_RHO);
     }
 
@@ -296,20 +325,6 @@ void emulateparty_mu(ff_mu_t base_alpha[MIRATH_PARAM_RHO], const ff_mu_t p,
 
     // share_alpha - mid_alpha * p
     mirath_vector_ff_mu_add_multiple(base_alpha, base_alpha, p, mid_alpha, MIRATH_PARAM_RHO);
-}
-
-/**
-* \fn void mirath_tcith_shift_to_left_array(uint8_t *inout_a, size_t length)
-* \brief This function performs a shift to right of the input.
-*
-* \param[in/out] inout_a uint8_t* Representation of a byte string
-* \param[in] length size_t Representation of the byte string length
-*/
-void mirath_tcith_shift_to_right_array(uint8_t *string, size_t length) {
-    for(size_t i = 0; i < length - 1; i++) {
-        mirath_tcith_shift_to_right(string[i], string[i + 1], string[i], 1, 8);
-    }
-    string[length - 1] >>= 1;
 }
 
 /**

@@ -34,9 +34,10 @@ void tests_ff(mirath_prng_t prng) {
 
         mirath_prng(&prng, &a, sizeof(a));
         mirath_prng(&prng, &b, sizeof(b));
-        // NOTE: use the correct finite field
-        // in order to avoid zero
         a = (a | b) & 0x0F;
+        // in order to avoid zero
+        if (a == 0)
+            a = 1;
 
         b = mirath_ff_inv(a);
         b = mirath_ff_product(a, b);
@@ -65,10 +66,10 @@ void tests_ff_mu(mirath_prng_t prng) {
     for (uint32_t i = 0; i < NTESTS; i++) {
         ff_mu_t a, b;
 
-        mirath_prng(&prng, &a, sizeof(a));
-        mirath_prng(&prng, &b, sizeof(b));
+        mirath_prng(&prng, &a, sizeof(ff_mu_t));
+        mirath_prng(&prng, &b, sizeof(ff_mu_t));
         // in order to avoid zero
-        a = (a | b) & 0x0F;
+        a = a | b;
 
         b = mirath_ff_mu_inv(a);
         b = mirath_ff_mu_mult(a, b);

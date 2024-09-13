@@ -74,6 +74,5 @@ uint8_t mirath_tcith_discard_input_challenge_2(const uint8_t *seed_input);
 
 #define mirath_tcith_shift_to_right(shiftOut, highIn, lowIn, shift, DigitSize)  \
     (shiftOut) = ((lowIn) >> (shift)) ^ ((highIn) << ((DigitSize) - (shift)));
-void mirath_tcith_shift_to_right_array(uint8_t *string, size_t length);
 
 #endif //MIRATH_TCITH_H

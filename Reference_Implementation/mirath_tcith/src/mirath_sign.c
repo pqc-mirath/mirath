@@ -3,15 +3,18 @@
 
 #include "prng.h"
 #include "random.h"
-#include "vector_ff_mu.h"
 #include "mirath_matrix_ff.h"
 #include "parsing.h"
 #include "mirath_tree.h"
 #include "mirath_tcith.h"
 
+#include <stdio.h>
+
 int mirath_keypair(uint8_t *pk, uint8_t *sk) {
     seed_t seed_sk;
     seed_t seed_pk;
+
+    uint32_t n_bytes = mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
 
     mirath_prng_t prng;
 
@@ -90,7 +93,7 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
 
     // Phase 0: Initialization
     // step 1 and 2
-    parse_secret_key(S, C, H, sk);
+    parse_secret_key(S, C, H, (const uint8_t *)sk);
     mirath_tciht_compute_public_key(pk, sk, S, C, H);
 
     // step 3
@@ -199,11 +202,11 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
          goto retry;
      }
 
-    // Phase 5: Signature
-    // step 21
-    unparse_signature(sig_msg, salt, ctr, hash2, path, path_length, commits, aux, mid_alpha, i_star);
+     // Phase 5: Signature
+     // step 21
+     unparse_signature(sig_msg, salt, ctr, hash2, path, path_length, commits, aux, mid_alpha, i_star);
 
-    return 0;
+     return 0;
 }
 
 int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_msg_len, uint8_t *pk) {

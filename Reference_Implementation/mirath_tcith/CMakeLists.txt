@@ -24,7 +24,9 @@ if(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
 endif()
 
 # just for debugging
-add_definitions(-DMIRATH_DETERMINISTIC)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    add_definitions(-DMIRATH_DETERMINISTIC)
+endif()
 
 set(COMMON_SOURCES
         ${PROJECT_SOURCE_DIR}/src/common/prng.c
