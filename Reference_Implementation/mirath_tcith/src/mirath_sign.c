@@ -14,8 +14,6 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
     seed_t seed_sk;
     seed_t seed_pk;
 
-    uint32_t n_bytes = mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
-
     mirath_prng_t prng;
 
     ff_t *S;
@@ -209,7 +207,7 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
      return 0;
 }
 
-int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_msg_len, uint8_t *pk) {
+int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) {
     seed_t seed_pk;
     uint8_t salt[MIRATH_PARAM_SALT_BYTES];
 
@@ -343,7 +341,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, size_t sig_ms
 
     // step 12
     hash_init(&hash_ctx);
-    hash_update(hash_ctx, (uint8_t *)ctr, sizeof(uint64_t));
+    hash_update(hash_ctx, (uint8_t *)&ctr, sizeof(uint64_t));
     hash_update(hash_ctx, hash2_partial, 2 * MIRATH_SECURITY_BYTES);
     hash_finalize(hash2_computed, hash_ctx);
 

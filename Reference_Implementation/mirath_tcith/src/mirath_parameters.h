@@ -13,7 +13,7 @@
 
 #define MIRATH_SECRET_KEY_BYTES 32		    /**< Secret key size */
 #define MIRATH_PUBLIC_KEY_BYTES 73		    /**< Public key size */
-#define MIRATH_SIGNATURE_BYTES 3684		    /**< Signature size */
+#define MIRATH_SIGNATURE_BYTES 3700		    /**< Signature size */
 
 #define MIRATH_PARAM_Q 16			            /**< Parameter q of the scheme (finite field GF(q^m)) */
 #define MIRATH_PARAM_M 16			        /**< Parameter m of the scheme (finite field GF(q^m)) */

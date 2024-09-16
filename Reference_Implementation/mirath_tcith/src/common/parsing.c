@@ -71,8 +71,8 @@ void unparse_signature(uint8_t *signature, const uint8_t salt[MIRATH_PARAM_SALT_
     memcpy(ptr, hash2, 2 * MIRATH_SECURITY_BYTES);
     ptr += 2 * MIRATH_SECURITY_BYTES;
 
-    memcpy(ptr, path, path_length * MIRATH_SECURITY_BYTES);
-    ptr += path_length * MIRATH_SECURITY_BYTES;
+    memcpy(ptr, path, MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES);
+    ptr += MIRATH_PARAM_T_OPEN * MIRATH_SECURITY_BYTES;
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
         memcpy(ptr, commits[e][i_star[e]], 2 * MIRATH_SECURITY_BYTES);

@@ -65,7 +65,7 @@ int test_mirath(void) {
         uint8_t sig_msg[CRYPTO_BYTES + MSG_LEN];
         size_t sig_msg_len;
         size_t msg_len = MSG_LEN;
-        size_t msg2_len;
+        size_t msg2_len = MSG_LEN;
         size_t pos;
         uint8_t byte;
 
@@ -82,7 +82,7 @@ int test_mirath(void) {
         mirath_sign(sig_msg, msg, MSG_LEN, sk);
 
         /* Verify the message */
-        if (mirath_verify(msg2, &msg2_len, sig_msg, sig_msg_len, pk) != 0)
+        if (mirath_verify(msg2, &msg2_len, sig_msg, pk) != 0)
         {
             printf("Error: Verification failed!\n");
             return -1;
@@ -116,7 +116,7 @@ int test_mirath(void) {
         /* * */
 
         /* Verify the forged signature. */
-        if (mirath_verify(msg, &msg_len, sig_msg, sig_msg_len, pk) == 0)
+        if (mirath_verify(msg, &msg_len, sig_msg, pk) == 0)
         {
             printf("Error: Trivial forgery possible!\n");
             return -1;

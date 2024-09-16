@@ -170,6 +170,7 @@ void compute_share(ff_mu_t share_S[MIRATH_PARAM_M * MIRATH_PARAM_R],
 
     const ff_t *aux_S = aux;
     const uint32_t n_bytes = mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R);
+    // TODO: here we could have the same situation when nrows is odd
     const ff_t *aux_C = aux + n_bytes;
 
     memcpy(commits[e][i_star], commits_i_star[e], 2 * MIRATH_SECURITY_BYTES);
@@ -195,7 +196,7 @@ void compute_share(ff_mu_t share_S[MIRATH_PARAM_M * MIRATH_PARAM_R],
             const ff_mu_t sc = (ff_mu_t) ((uint16_t) i_star ^ i);
 
             mirath_matrix_ff_mu_add_multiple_ff(share_S, sc, Si, MIRATH_PARAM_M, MIRATH_PARAM_R);
-            mirath_matrix_ff_mu_add_multiple_ff(share_C, sc, Ci, MIRATH_PARAM_M, MIRATH_PARAM_R);
+            mirath_matrix_ff_mu_add_multiple_ff(share_C, sc, Ci, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
             mirath_vector_ff_mu_add_multiple(share_v, share_v, sc, vi, MIRATH_PARAM_RHO);
         }
     }
