@@ -13,7 +13,7 @@
 
 #define MIRATH_SECRET_KEY_BYTES 32		    /**< Secret key size */
 #define MIRATH_PUBLIC_KEY_BYTES 73		    /**< Public key size */
-#define MIRATH_SIGNATURE_BYTES 3700		    /**< Signature size */
+#define MIRATH_SIGNATURE_BYTES 4280		    /**< Signature size */
 
 #define MIRATH_PARAM_Q 16			            /**< Parameter q of the scheme (finite field GF(q^m)) */
 #define MIRATH_PARAM_M 16			        /**< Parameter m of the scheme (finite field GF(q^m)) */
@@ -32,7 +32,7 @@
 #define MIRATH_PARAM_TAU 20			        /**< Parameter tau of the scheme (number of iterations) */
 #define MIRATH_PARAM_TAU_1 4			        /**< Parameter tau_1 of the scheme (number of iterations concerning N1) */
 #define MIRATH_PARAM_TAU_2 16		        /**< Parameter tau_2 of the scheme (number of iterations concerning N2) */
-#define MIRATH_PARAM_RHO 3			        /**< Parameter rho of the scheme (dimension of the extension)*/
+#define MIRATH_PARAM_RHO 32			        /**< Parameter rho of the scheme (dimension of the extension)*/
 
 #define MIRATH_PARAM_TREE_NODES 7167		    /**< Number of nodes in the tree */
 #define MIRATH_PARAM_TREE_LEAVES 3072	    /**< Number of leaves in the tree */
