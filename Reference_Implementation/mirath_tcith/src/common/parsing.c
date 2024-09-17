@@ -118,7 +118,7 @@ void parse_signature(uint8_t salt[MIRATH_PARAM_SALT_BYTES], uint64_t *ctr, hash_
         memcpy(aux[e], ptr, n_bytes);
         ptr += n_bytes;
 
-        memcpy(mid_alpha[e], ptr, MIRATH_PARAM_RHO);
-        ptr += MIRATH_PARAM_RHO;
+        memcpy(mid_alpha[e], ptr, sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
+        ptr += sizeof(ff_mu_t) * MIRATH_PARAM_RHO;
     }
 }

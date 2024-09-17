@@ -321,7 +321,9 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
 
     // Phase 2: MPC simulation
     // step 10 and 11
+    domain_separator = DOMAIN_SEPARATOR_HASH2_PARTIAL;
     hash_init(&hash_ctx);
+    hash_update(hash_ctx, &domain_separator, sizeof(uint8_t));
     hash_update(hash_ctx, msg, *msg_len);
     hash_update(hash_ctx, salt, MIRATH_PARAM_SALT_BYTES);
     hash_update(hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
