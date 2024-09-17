@@ -60,13 +60,13 @@ void unparse_signature(uint8_t *signature, const uint8_t salt[MIRATH_PARAM_SALT_
 
     uint8_t *ptr;
 
-    ptr = signature;
+    ptr = (uint8_t *)signature;
 
     memcpy(ptr, salt, MIRATH_PARAM_SALT_BYTES);
     ptr += MIRATH_PARAM_SALT_BYTES;
 
     memcpy(ptr, &ctr, sizeof(uint64_t));
-    ptr += sizeof(ctr);
+    ptr += sizeof(uint64_t);
 
     memcpy(ptr, hash2, 2 * MIRATH_SECURITY_BYTES);
     ptr += 2 * MIRATH_SECURITY_BYTES;
@@ -105,7 +105,7 @@ void parse_signature(uint8_t salt[MIRATH_PARAM_SALT_BYTES], uint64_t *ctr, hash_
     memcpy(hash2, ptr, 2 * MIRATH_SECURITY_BYTES);
     ptr += 2 * MIRATH_SECURITY_BYTES;
 
-    memcpy(ptr, path, MIRATH_SECURITY_BYTES * MIRATH_PARAM_T_OPEN);
+    memcpy(path, ptr, MIRATH_SECURITY_BYTES * MIRATH_PARAM_T_OPEN);
     ptr += MIRATH_SECURITY_BYTES * MIRATH_PARAM_T_OPEN;
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
