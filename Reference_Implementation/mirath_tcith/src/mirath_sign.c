@@ -231,7 +231,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
 
     uint8_t domain_separator;
 
-    ff_mu_t share_S[MIRATH_PARAM_TAU][MIRATH_PARAM_M * MIRATH_PARAM_N];
+    ff_mu_t share_S[MIRATH_PARAM_TAU][MIRATH_PARAM_M * MIRATH_PARAM_R];
     ff_mu_t share_C[MIRATH_PARAM_TAU][MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R)];
     ff_mu_t share_v[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO];
     ff_mu_t gamma[MIRATH_PARAM_RHO * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)];
@@ -293,7 +293,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
         const uint16_t N = e < MIRATH_PARAM_TAU_1 ? MIRATH_PARAM_N_1 : MIRATH_PARAM_N_2;
 
-        memset(share_S[e], 0, sizeof(ff_mu_t) * MIRATH_PARAM_M * MIRATH_PARAM_N);
+        memset(share_S[e], 0, sizeof(ff_mu_t) * MIRATH_PARAM_M * MIRATH_PARAM_R);
         memset(share_C[e], 0, sizeof(ff_mu_t) * MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R));
         memset(share_v[e], 0, sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
 
