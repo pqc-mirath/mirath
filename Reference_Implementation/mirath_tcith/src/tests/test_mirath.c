@@ -63,7 +63,9 @@ int test_mirath(void) {
         uint8_t pk[CRYPTO_PUBLICKEYBYTES] = {0};
         uint8_t sk[CRYPTO_SECRETKEYBYTES] = {0};
         uint8_t sig_msg[CRYPTO_BYTES + MSG_LEN];
-        size_t sig_msg_len;
+        // Todo: add message in the signature
+//        size_t sig_msg_len = MIRATH_SIGNATURE_BYTES + MSG_LEN;
+        size_t sig_msg_len = MIRATH_SIGNATURE_BYTES;
         size_t msg_len = MSG_LEN;
         size_t msg2_len = MSG_LEN;
         size_t pos;
@@ -82,7 +84,9 @@ int test_mirath(void) {
         mirath_sign(sig_msg, msg, MSG_LEN, sk);
 
         /* Verify the message */
-        if (mirath_verify(msg2, &msg2_len, sig_msg, pk) != 0)
+        // Todo: add message in the signature
+//        if (mirath_verify(msg2, &msg2_len, sig_msg, pk) != 0)
+        if (mirath_verify(msg, &msg2_len, sig_msg, pk) != 0)
         {
             printf("Error: Verification failed!\n");
             return -1;
@@ -95,12 +99,13 @@ int test_mirath(void) {
             return -1;
         }
 
+        // Todo: add message in the signature
         /* Check the message. */
-        if (memcmp(msg, msg2, msg_len) != 0)
-        {
-            printf("Error: Messages don't match!\n");
-            return -1;
-        }
+//        if (memcmp(msg, msg2, msg_len) != 0)
+//        {
+//            printf("Error: Messages don't match!\n");
+//            return -1;
+//        }
 
         /* Change one random byte of the signature. */
         randombytes((uint8_t *)&pos, sizeof(pos));

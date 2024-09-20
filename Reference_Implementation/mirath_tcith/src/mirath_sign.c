@@ -122,7 +122,7 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
         const uint16_t N = e < MIRATH_PARAM_TAU_1 ? MIRATH_PARAM_N_1 : MIRATH_PARAM_N_2;
 
-        build_sharing_N(aux[e], rnd_S[e], rnd_C[e], rnd_v[e], commits, seeds, S, C, salt, e);
+        build_sharing_N(aux[e], rnd_S[e], rnd_C[e], rnd_v[e], v[e], commits, seeds, S, C, salt, e);
 
         hash_update(hash_commits, (uint8_t *)commits[e], sizeof(mirath_tcith_commit_t) * N);
     }
@@ -156,11 +156,11 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
     hash_update(hash_ctx, hash1, 2 * MIRATH_SECURITY_BYTES);
 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
-        ff_mu_t base_alpha[MIRATH_PARAM_M * (MIRATH_PARAM_N - MIRATH_PARAM_R)];
+        ff_mu_t base_alpha[MIRATH_PARAM_RHO];
 
         emulateMPC_mu(base_alpha, mid_alpha[e], S, rnd_S[e], C, rnd_C[e], v[e], rnd_v[e], gamma, H);
 
-        hash_update(hash_ctx, base_alpha, sizeof(ff_mu_t) * (MIRATH_PARAM_M * (MIRATH_PARAM_N - MIRATH_PARAM_R)));
+        hash_update(hash_ctx, base_alpha, sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
         hash_update(hash_ctx, mid_alpha[e], sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
     }
 
@@ -172,39 +172,37 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
     // Phase 4: Second challenge (view opening)
     uint64_t ctr = 0;
     uint64_t path_length;
- retry:
-     // Initialize hash_ctx
-     hash_init(&hash_ctx);
-     domain_separator = DOMAIN_SEPARATOR_HASH2;
-     hash_update(hash_ctx, &domain_separator, sizeof(uint8_t));
-     hash_update(hash_ctx, (uint8_t *)&ctr, sizeof(uint64_t));
-     hash_update(hash_ctx, pk, MIRATH_PUBLIC_KEY_BYTES);
-     hash_finalize(hash2, hash_ctx);
+retry:
+    // Initialize hash_ctx
+    hash_init(&hash_ctx);
+    domain_separator = DOMAIN_SEPARATOR_HASH2;
+    hash_update(hash_ctx, &domain_separator, sizeof(uint8_t));
+    hash_update(hash_ctx, (uint8_t *)&ctr, sizeof(uint64_t));
+    hash_update(hash_ctx, pk, MIRATH_PUBLIC_KEY_BYTES);
+    hash_update(hash_ctx, hash2_partial, 2 * MIRATH_SECURITY_BYTES);
+    hash_finalize(hash2, hash_ctx);
+    if (mirath_tcith_discard_input_challenge_2(hash2)) {
+        ctr += 1;
+        goto retry;
+    }
+    mirath_tcith_compute_challenge_2(i_star, hash2, salt);
+    // Next we map the challenges to the leaves position (GGM Tree optimization)
+    for(size_t e = 0; e < MIRATH_PARAM_TAU; e++){
+        size_t i = i_star[e];
+        psi_i_star[e] = (uint16_t)mirath_tcith_psi(i, e); // store their respectively image under psi
+    }
+    path_length = mirath_tree_get_sibling_path(path, &tree, psi_i_star, MIRATH_PARAM_TAU);
+    if (path_length > MIRATH_PARAM_T_OPEN) {
+        ctr += 1;
+        memset(path, 0, sizeof(uint8_t) * (MIRATH_PARAM_TREE_LEAVES * MIRATH_SECURITY_BYTES));
+        goto retry;
+    }
 
-     if (mirath_tcith_discard_input_challenge_2(hash2)) {
-         ctr += 1;
-         goto retry;
-     }
+    // Phase 5: Signature
+    // step 21
+    unparse_signature(sig_msg, salt, ctr, hash2, path, path_length, commits, aux, mid_alpha, i_star);
 
-     mirath_tcith_compute_challenge_2(i_star, hash2, salt);
-     // Next we map the challenges to the leaves position (GGM Tree optimization)
-     for(size_t e = 0; e < MIRATH_PARAM_TAU; e++){
-         size_t i = i_star[e];
-         psi_i_star[e] = (uint16_t)mirath_tcith_psi(i, e); // store their respectively image under psi
-     }
-
-     path_length = mirath_tree_get_sibling_path(path, &tree, psi_i_star, MIRATH_PARAM_TAU);
-     if (path_length > MIRATH_PARAM_T_OPEN) {
-         ctr += 1;
-         memset(path, 0, sizeof(uint8_t) * (MIRATH_PARAM_TREE_LEAVES * MIRATH_SECURITY_BYTES));
-         goto retry;
-     }
-
-     // Phase 5: Signature
-     // step 21
-     unparse_signature(sig_msg, salt, ctr, hash2, path, path_length, commits, aux, mid_alpha, i_star);
-
-     return 0;
+    return 0;
 }
 
 int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) {
@@ -333,7 +331,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
 
         emulateparty_mu(base_alpha, i_star[e], share_S[e], share_C[e], share_v[e], gamma, H, y, mid_alpha[e]);
 
-        hash_update(hash_ctx, base_alpha, sizeof(ff_mu_t) * (MIRATH_PARAM_M * (MIRATH_PARAM_N - MIRATH_PARAM_R)));
+        hash_update(hash_ctx, base_alpha, sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
         hash_update(hash_ctx, mid_alpha[e], sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
     }
 
@@ -343,7 +341,10 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
 
     // step 12
     hash_init(&hash_ctx);
+    domain_separator = DOMAIN_SEPARATOR_HASH2;
+    hash_update(hash_ctx, &domain_separator, sizeof(uint8_t));
     hash_update(hash_ctx, (uint8_t *)&ctr, sizeof(uint64_t));
+    hash_update(hash_ctx, pk, MIRATH_PUBLIC_KEY_BYTES);
     hash_update(hash_ctx, hash2_partial, 2 * MIRATH_SECURITY_BYTES);
     hash_finalize(hash2_computed, hash_ctx);
 

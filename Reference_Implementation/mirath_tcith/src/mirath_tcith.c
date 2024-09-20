@@ -111,7 +111,8 @@ size_t mirath_tcith_psi(size_t i, size_t e) {
 void build_sharing_N(ff_t aux[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1)],
                    ff_mu_t rnd_S[MIRATH_PARAM_M * MIRATH_PARAM_R],
                    ff_mu_t rnd_C[MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R)],
-                   ff_mu_t rnd_v[MIRATH_PARAM_RHO], mirath_tcith_commit_t *commits[MIRATH_PARAM_TAU],
+                   ff_mu_t rnd_v[MIRATH_PARAM_RHO], ff_mu_t v[MIRATH_PARAM_RHO],
+                   mirath_tcith_commit_t *commits[MIRATH_PARAM_TAU],
                    const mirath_tree_leaves_t seeds,
                    const ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)],
                    const ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)],
@@ -123,10 +124,10 @@ void build_sharing_N(ff_t aux[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRAT
     memset(rnd_S, 0, sizeof(ff_mu_t) * (MIRATH_PARAM_M * MIRATH_PARAM_R));
     memset(rnd_C, 0, sizeof(ff_mu_t) * (MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R)));
     memset(rnd_v, 0, sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
+    memset(v, 0, sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
 
     ff_t acc_share_S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)] = {0};
     ff_t acc_share_C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)] = {0};
-    ff_mu_t acc_share_v[MIRATH_PARAM_RHO] = {0};
 
     for (uint16_t i = 0; i < N; i++) {
         mirath_prng_t prng;
@@ -146,7 +147,7 @@ void build_sharing_N(ff_t aux[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRAT
 
         mirath_matrix_ff_add(acc_share_S, acc_share_S, Si, MIRATH_PARAM_M, MIRATH_PARAM_R);
         mirath_matrix_ff_add(acc_share_C, acc_share_C, Ci, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
-        mirath_vector_ff_mu_add(acc_share_v, acc_share_v, vi, MIRATH_PARAM_RHO);
+        mirath_vector_ff_mu_add(v, v, vi, MIRATH_PARAM_RHO);
 
         const ff_mu_t phi_i = (ff_mu_t)i;
         mirath_matrix_ff_mu_add_multiple_ff(rnd_S, phi_i, Si, MIRATH_PARAM_M, MIRATH_PARAM_R);
@@ -255,7 +256,7 @@ void emulateMPC_mu(ff_mu_t base_alpha[MIRATH_PARAM_RHO],
     mirath_vector_ff_mu_add(tmp, tmp, e_A, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K);
     // gamma * [e_A + (H * e_B)]
     mirath_matrix_ff_mu_product(base_alpha, gamma, tmp, MIRATH_PARAM_RHO, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1);
-    // gamma * [e_A + (H * e_B)] + rnf_V
+    // gamma * [e_A + (H * e_B)] + rnd_V
     mirath_vector_ff_mu_add(base_alpha, base_alpha, rnd_v, MIRATH_PARAM_RHO);
 
     ff_mu_t aux_s[MIRATH_PARAM_M * MIRATH_PARAM_R];
