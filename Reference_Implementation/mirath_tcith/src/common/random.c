@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 
 #include "random.h"
 
@@ -50,12 +51,22 @@ void randombytes(uint8_t *target, size_t length)
     
 #else
 
-#ifdef  __unix
-    getrandom(target, length, 0);
+#if defined (__unix) || defined(__APPLE__)
+
+    FILE* urandom = fopen("/dev/urandom", "r");
+    if (urandom == NULL) {
+        return;
+    }
+
+    if (fread(target, sizeof(uint8_t), length, urandom) != length) {
+        return;
+    }
+    fclose(urandom);
+
 #endif
 
-#ifdef _WIN32
-#error "random_bytes on Windows not implemented yet!"
+#if defined(_WIN32) || defined(_WIN64)
+#error "randombytes on Windows not implemented yet!"
 #endif
 
 #endif /* #ifdef MIRATH_DETERMINISTIC */
