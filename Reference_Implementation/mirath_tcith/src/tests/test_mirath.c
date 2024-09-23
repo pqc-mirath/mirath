@@ -59,7 +59,7 @@ int test_mirath(void) {
     for (uint32_t i = 0; i < N_TESTS; i++)
     {
         uint8_t msg[MSG_LEN] = {0};
-        uint8_t msg2[MSG_LEN] = {0};
+//        uint8_t msg2[MSG_LEN] = {0};
         uint8_t pk[CRYPTO_PUBLICKEYBYTES] = {0};
         uint8_t sk[CRYPTO_SECRETKEYBYTES] = {0};
         uint8_t sig_msg[CRYPTO_BYTES + MSG_LEN];
@@ -71,7 +71,11 @@ int test_mirath(void) {
         size_t pos;
         uint8_t byte;
 
-        printf("\nTest %d of %d...\n\n", i + 1, N_TESTS);
+//        printf("\nTest %d of %d...\n\n", i + 1, N_TESTS);
+        printf("Testing [%u]:\t", i);
+        printf("%2u%%", 100 * i / N_TESTS);
+        fflush(stdout);
+        printf("\r\x1b[K");
 
         /* Generate a random message. */
         randombytes(msg, MSG_LEN);
@@ -127,10 +131,10 @@ int test_mirath(void) {
             return -1;
         }
 
-        printf("OK!\n");
+//        printf("OK!\n");
     }
 
-    printf("\nEverything's OK!\n\n");
+    printf("Everything's OK!\n\n");
 
     return 0;
 }
