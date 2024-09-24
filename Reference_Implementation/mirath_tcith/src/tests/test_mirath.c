@@ -74,8 +74,8 @@ int test_mirath(void) {
 //        printf("\nTest %d of %d...\n\n", i + 1, N_TESTS);
         printf("Testing [%u]:\t", i);
         printf("%2u%%", 100 * i / N_TESTS);
-        fflush(stdout);
-        printf("\r\x1b[K");
+//        fflush(stdout);
+//        printf("\r\x1b[K");
 
         /* Generate a random message. */
         randombytes(msg, MSG_LEN);
@@ -92,14 +92,14 @@ int test_mirath(void) {
 //        if (mirath_verify(msg2, &msg2_len, sig_msg, pk) != 0)
         if (mirath_verify(msg, &msg2_len, sig_msg, pk) != 0)
         {
-            printf("Error: Verification failed!\n");
+            printf("\nError: Verification failed!\n");
             return -1;
         }
 
         /* Check the message length. */
         if (msg_len != msg2_len)
         {
-            printf("Error: Message lengths don't match!\n");
+            printf("\nError: Message lengths don't match!\n");
             return -1;
         }
 
@@ -132,6 +132,8 @@ int test_mirath(void) {
         }
 
 //        printf("OK!\n");
+        fflush(stdout);
+        printf("\r\x1b[K");
     }
 
     printf("Everything's OK!\n\n");
@@ -141,6 +143,9 @@ int test_mirath(void) {
 
 int main(void) {
     int ret;
+    printf("\nBytes concerning secret key:\t%d", MIRATH_SECRET_KEY_BYTES);
+    printf("\nBytes concerning public key:\t%d", MIRATH_PUBLIC_KEY_BYTES);
+    printf("\nBytes concerning signature: \t%d\n\n", MIRATH_SIGNATURE_BYTES);
     ret = test_mirath_keypair();
     ret ^= test_mirath();
 

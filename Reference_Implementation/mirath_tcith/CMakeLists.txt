@@ -28,6 +28,16 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     add_definitions(-DMIRATH_DETERMINISTIC)
 endif()
 
+set(PARAMETER_SET)
+if ("${OPT_SET}" STREQUAL "")
+    set(PARAMETER_SET ${PARAMETER_SET} -D_Ia_)
+else()
+    set(PARAMETER_SET ${PARAMETER_SET} -D_${OPT_SET}_)
+endif()
+
+MESSAGE(STATUS "Parameter set: ${PARAMETER_SET}")
+add_definitions("${PARAMETER_SET}")
+
 set(COMMON_SOURCES
         ${PROJECT_SOURCE_DIR}/src/common/prng.c
         ${PROJECT_SOURCE_DIR}/src/common/fips202.c
