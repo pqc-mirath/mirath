@@ -34,7 +34,7 @@ cmake -DCMAKE_BUILD_TYPE=Debug -DP_SET=IIIa -B build
 cmake -DCMAKE_BUILD_TYPE=Debug -DP_SET=Va -B build
 ```
 
-Jump into buiild folder and build all target libraries for all supported primes:
+Jump into buiild folder and build all target libraries for all supported parameter sets:
 
 ```bash
 cd build
