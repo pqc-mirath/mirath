@@ -29,6 +29,11 @@ static const ff_t mirath_ff_inv_table[16] __attribute__((aligned(16))) = {
     0, 1, 9, 14, 13, 11, 7, 6, 15, 2, 12, 5, 10, 4, 3, 8
 };
 
+static inline ff_t mirath_ff_add(const ff_t a,
+                                 const ff_t b) {
+    return a ^ b;
+}
+
 /// NOTE: assumes a mod 16
 /// \param a input element
 /// \return a**{-1}
