@@ -4,16 +4,16 @@
 #include <stdint.h>
 #include "ff_mu.h"
 #include "matrix_ff_arith.h"
-//#include "prng.h"
+#include "prng.h"
 
 #define mirath_matrix_ff_mu_get_entry(m,n,i,j) m[j*n + i]
 #define mirath_matrix_ff_mu_set_entry(m,n,i,j,v) m[j*n + i] = v
 
-#define mirath_matrix_ff_mu_bytes_size(x, y) ((x) * (y))
+#define mirath_matrix_ff_mu_bytes_size(x, y) ((x) * (y) * sizeof(ff_mu_t))
 
-// static inline void mirath_matrix_ff_mu_random(ff_mu_t *matrix, const uint32_t n_rows, const uint32_t n_cols, mirath_prng_t *prng) {
-//     mirath_prng(prng, matrix, ((n_rows) * (n_cols) * sizeof(ff_mu_t)));
-// }
+static inline void mirath_matrix_ff_mu_random(ff_mu_t *matrix, const uint32_t n_rows, const uint32_t n_cols, mirath_prng_t *prng) {
+    mirath_prng(prng, matrix, ((n_rows) * (n_cols) * sizeof(ff_mu_t)));
+}
 
 static inline void mirath_matrix_ff_mu_copy(ff_mu_t *matrix1, const ff_mu_t *matrix2, const uint32_t n_rows, const uint32_t n_cols) {
     memcpy(matrix1, matrix2, mirath_matrix_ff_mu_bytes_size(n_rows, n_cols));
