@@ -29,7 +29,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 endif()
 
 set(PARAMETER_SET)
-if ("${OPT_SET}" STREQUAL "")
+if (NOT OPT_SET)
     set(PARAMETER_SET ${PARAMETER_SET} -D_Ia_)
 else()
     set(PARAMETER_SET ${PARAMETER_SET} -D_${OPT_SET}_)

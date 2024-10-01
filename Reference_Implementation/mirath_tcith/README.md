@@ -29,9 +29,9 @@ Optionally, add personal preference to CMAKE such as `-DCMAKE_MAKE_PROGRAM=path/
 
 ```bash
 cmake -DCMAKE_BUILD_TYPE=Debug -B build
-cmake -DCMAKE_BUILD_TYPE=Debug -DP_SET=Ia -B build
-cmake -DCMAKE_BUILD_TYPE=Debug -DP_SET=IIIa -B build
-cmake -DCMAKE_BUILD_TYPE=Debug -DP_SET=Va -B build
+cmake -DCMAKE_BUILD_TYPE=Debug -DOPT_SET=Ia -B build
+cmake -DCMAKE_BUILD_TYPE=Debug -DOPT_SET=IIIa -B build
+cmake -DCMAKE_BUILD_TYPE=Debug -DOPT_SET=Va -B build
 ```
 
 Jump into buiild folder and build all target libraries for all supported parameter sets:
