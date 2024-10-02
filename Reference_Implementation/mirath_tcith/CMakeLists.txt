@@ -56,10 +56,10 @@ set(MIRATH_SOURCES
 )
 
 add_executable(test_arith src/tests/test_arith.c ${COMMON_SOURCES} src/mirath_matrix_ff.c)
-target_include_directories(test_arith PRIVATE src src/arith src/common)
+target_include_directories(test_arith PRIVATE src src/q_16 src/common)
 
 add_executable(test_tree src/tests/test_tree.c ${COMMON_SOURCES} src/mirath_tree.c)
 target_include_directories(test_tree PRIVATE src src/common)
 
 add_executable(test_mirath src/tests/test_mirath.c ${COMMON_SOURCES} ${MIRATH_SOURCES})
-target_include_directories(test_mirath PRIVATE src src/arith src/common)
+target_include_directories(test_mirath PRIVATE src src/q_16 src/common)
