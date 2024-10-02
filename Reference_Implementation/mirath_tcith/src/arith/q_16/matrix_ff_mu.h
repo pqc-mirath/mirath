@@ -2,7 +2,13 @@
 #define MIRATH_MATRIX_FF_MU_H
 
 #include <stdint.h>
-#include "ff_mu.h"
+
+#if defined(_SHORT_)
+#include "mu_short/ff_mu.h"
+#else
+#include "mu_fast/ff_mu.h"
+#endif
+
 #include "matrix_ff_arith.h"
 #include "prng.h"
 

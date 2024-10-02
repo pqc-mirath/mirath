@@ -4,7 +4,13 @@
 #include <stdint.h>
 #include "prng.h"
 #include "matrix_ff_arith.h"
-#include "ff_mu.h"
+
+#if defined(_SHORT_)
+#include "mu_short/ff_mu.h"
+#else
+#include "mu_fast/ff_mu.h"
+#endif
+
 #include "vector_ff_arith.h"
 
 /**

@@ -5,8 +5,7 @@
 
 #include "prng.h"
 #include "random.h"
-#include "q_16/matrix_ff_mu.h"
-#include "q_16/vector_ff_mu.h"
+#include "arith/mirath_arith.h"
 #include "mirath_matrix_ff.h"
 #include "mirath_tcith.h"
 #include "mirath_tree.h"

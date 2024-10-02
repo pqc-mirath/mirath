@@ -28,12 +28,31 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     add_definitions(-DMIRATH_DETERMINISTIC)
 endif()
 
+# Parameter set choice
 set(PARAMETER_SET)
-if (NOT OPT_SET)
-    set(PARAMETER_SET ${PARAMETER_SET} -D_Ia_)
+set(BASELINE_FIELD)
+set(SECURITY_LEVEL)
+set(VARIANT_LENGTH)
+if (NOT OPT_Q)
+    set(BASELINE_FIELD ${BASELINE_FIELD} a)
 else()
-    set(PARAMETER_SET ${PARAMETER_SET} -D_${OPT_SET}_)
+    set(BASELINE_FIELD ${BASELINE_FIELD} ${OPT_Q})
 endif()
+
+if (NOT OPT_SEC)
+    set(SECURITY_LEVEL ${SECURITY_LEVEL} I)
+else()
+    set(SECURITY_LEVEL ${SECURITY_LEVEL} ${OPT_SEC})
+endif()
+
+if (NOT OPT_LEN)
+    set(VARIANT_LENGTH ${VARIANT_LENGTH} -D_FAST_)
+else()
+    set(VARIANT_LENGTH ${VARIANT_LENGTH} -D_${OPT_LEN}_)
+endif()
+
+set(PARAMETER_SET ${PARAMETER_SET} "-D_${SECURITY_LEVEL}${BASELINE_FIELD}_ ${VARIANT_LENGTH}")
+
 
 MESSAGE(STATUS "Parameter set: ${PARAMETER_SET}")
 add_definitions("${PARAMETER_SET}")
@@ -56,10 +75,10 @@ set(MIRATH_SOURCES
 )
 
 add_executable(test_arith src/tests/test_arith.c ${COMMON_SOURCES} src/mirath_matrix_ff.c)
-target_include_directories(test_arith PRIVATE src src/q_16 src/common)
+target_include_directories(test_arith PRIVATE src src/arith/q_2 src/common)
 
 add_executable(test_tree src/tests/test_tree.c ${COMMON_SOURCES} src/mirath_tree.c)
 target_include_directories(test_tree PRIVATE src src/common)
 
 add_executable(test_mirath src/tests/test_mirath.c ${COMMON_SOURCES} ${MIRATH_SOURCES})
-target_include_directories(test_mirath PRIVATE src src/q_16 src/common)
+target_include_directories(test_mirath PRIVATE src src/arith/q_2 src/common)

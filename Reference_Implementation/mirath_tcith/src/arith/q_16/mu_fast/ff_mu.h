@@ -2,7 +2,7 @@
 #define ARITH_FF_MU_H
 
 #include <stdint.h>
-#include "data_type.h"
+#include "../data_type.h"
 
 /// AES modulus
 #define MODULUS 0x1B

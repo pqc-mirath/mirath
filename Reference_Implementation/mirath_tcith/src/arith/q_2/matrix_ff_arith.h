@@ -2,7 +2,12 @@
 #define MATRIX_FF_ARITH_H
 
 #include "ff.h"
-#include "ff_mu.h"
+
+#if defined(_SHORT_)
+#include "mu_short/ff_mu.h"
+#else
+#include "mu_fast/ff_mu.h"
+#endif
 
 #define mirath_matrix_ff_bytes_per_column(n_rows) (((n_rows) >> 3) + (((n_rows) & 0x1) | (((n_rows) & 0x2) >> 1) | (((n_rows) & 0x4) >> 2)))
 #define mirath_matrix_ff_bytes_size(n_rows, n_cols) ((mirath_matrix_ff_bytes_per_column(n_rows)) * (n_cols))

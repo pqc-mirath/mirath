@@ -1,10 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
-#include "q_16/ff.h"
-#include "q_16/ff_mu.h"
 #include "prng.h"
-#include "q_16/vector_ff_mu.h"
-#include "q_16/matrix_ff_mu.h"
+#include "arith/mirath_arith.h"
 #include "mirath_matrix_ff.h"
 
 #define NTESTS 100
