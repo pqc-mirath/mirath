@@ -5,16 +5,16 @@
 #include "mirath_matrix_ff.h"
 #include "mirath_tcith.h"
 
-void unparse_public_key(uint8_t *pk, const seed_t seed_pk, const ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)]) {
+void unparse_public_key(uint8_t *pk, const seed_t seed_pk, const ff_t y[MIRATH_VAR_FF_Y_BYTES]) {
     memcpy(pk, seed_pk, MIRATH_SECURITY_BYTES);
 
-    memcpy(pk + MIRATH_SECURITY_BYTES, y, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1));
+    memcpy(pk + MIRATH_SECURITY_BYTES, y, MIRATH_VAR_FF_Y_BYTES);
 }
 
-void parse_public_key(seed_t seed_pk, ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)], const uint8_t *pk) {
+void parse_public_key(seed_t seed_pk, ff_t y[MIRATH_VAR_FF_Y_BYTES], const uint8_t *pk) {
     memcpy(seed_pk, pk, MIRATH_SECURITY_BYTES);
 
-    memcpy(y, pk + MIRATH_SECURITY_BYTES, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1));
+    memcpy(y, pk + MIRATH_SECURITY_BYTES, MIRATH_VAR_FF_Y_BYTES);
 }
 
 void unparse_secret_key(uint8_t *sk, const seed_t seed_sk, const seed_t seed_pk) {
@@ -23,9 +23,8 @@ void unparse_secret_key(uint8_t *sk, const seed_t seed_sk, const seed_t seed_pk)
     memcpy(sk + MIRATH_SECURITY_BYTES, seed_pk, MIRATH_SECURITY_BYTES);
 }
 
-void parse_secret_key(ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)],
-                      ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)],
-                      ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)],
+void parse_secret_key(ff_t S[MIRATH_VAR_FF_S_BYTES], ff_t C[MIRATH_VAR_FF_C_BYTES],
+                      ff_t H[MIRATH_VAR_FF_H_BYTES],
                       const uint8_t *sk) {
     seed_t seed;
     mirath_prng_t prng;
@@ -35,10 +34,10 @@ void parse_secret_key(ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_
 
     mirath_prng_init(&prng, NULL, seed, MIRATH_SECURITY_BYTES);
     // TODO: use pointers in the optimized version
-    ff_t T[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R) + mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)];
-    mirath_prng(&prng, T, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R) + mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R));
-    memcpy(S, T, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R));
-    memcpy(C, T + mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R), mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R));
+    ff_t T[MIRATH_VAR_FF_S_BYTES + MIRATH_VAR_FF_C_BYTES];
+    mirath_prng(&prng, T, MIRATH_VAR_FF_S_BYTES + MIRATH_VAR_FF_C_BYTES);
+    memcpy(S, T, MIRATH_VAR_FF_S_BYTES);
+    memcpy(C, T + MIRATH_VAR_FF_S_BYTES, MIRATH_VAR_FF_C_BYTES);
 
     mirath_matrix_set_to_ff(S, MIRATH_PARAM_M, MIRATH_PARAM_R);
     mirath_matrix_set_to_ff(C, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
@@ -46,7 +45,7 @@ void parse_secret_key(ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_
     // public seed
     memcpy(seed, sk + MIRATH_SECURITY_BYTES, MIRATH_SECURITY_BYTES);
     mirath_prng_init(&prng, NULL, seed, MIRATH_SECURITY_BYTES);
-    mirath_prng(&prng, H, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K));
+    mirath_prng(&prng, H, MIRATH_VAR_FF_H_BYTES);
 
     mirath_matrix_set_to_ff(H, MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K);
 }
@@ -54,7 +53,7 @@ void parse_secret_key(ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_
 void unparse_signature(uint8_t *signature, const uint8_t salt[MIRATH_PARAM_SALT_BYTES], const uint64_t ctr,
                        const hash_t hash2, const uint8_t *path, const uint64_t path_length,
                        mirath_tcith_commit_t *commits[MIRATH_PARAM_TAU],
-                       const ff_t aux[MIRATH_PARAM_TAU][mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1)],
+                       const ff_t aux[MIRATH_PARAM_TAU][MIRATH_VAR_FF_AUX_BYTES],
                        const ff_mu_t mid_alpha[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO],
                        const mirath_tcith_challenge_t i_star) {
 
@@ -79,10 +78,9 @@ void unparse_signature(uint8_t *signature, const uint8_t salt[MIRATH_PARAM_SALT_
         ptr += 2 * MIRATH_SECURITY_BYTES;
     }
 
-    const uint32_t n_bytes = mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1);
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
-        memcpy(ptr, aux[e], n_bytes);
-        ptr += n_bytes;
+        memcpy(ptr, aux[e], MIRATH_VAR_FF_AUX_BYTES);
+        ptr += MIRATH_VAR_FF_AUX_BYTES;
 
         memcpy(ptr, mid_alpha[e], sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
         ptr += sizeof(ff_mu_t) * MIRATH_PARAM_RHO;
@@ -91,7 +89,7 @@ void unparse_signature(uint8_t *signature, const uint8_t salt[MIRATH_PARAM_SALT_
 
 void parse_signature(uint8_t salt[MIRATH_PARAM_SALT_BYTES], uint64_t *ctr, hash_t hash2,
                      uint8_t *path, mirath_tcith_commit_t commits_i_star[MIRATH_PARAM_TAU],
-                     ff_t aux[MIRATH_PARAM_TAU][mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1)],
+                     ff_t aux[MIRATH_PARAM_TAU][MIRATH_VAR_FF_AUX_BYTES],
                      ff_mu_t mid_alpha[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO], const uint8_t *signature) {
 
     uint8_t *ptr = (uint8_t *)signature;
@@ -113,10 +111,9 @@ void parse_signature(uint8_t salt[MIRATH_PARAM_SALT_BYTES], uint64_t *ctr, hash_
         ptr += 2 * MIRATH_SECURITY_BYTES;
     }
 
-    const uint32_t n_bytes = mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1);
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
-        memcpy(aux[e], ptr, n_bytes);
-        ptr += n_bytes;
+        memcpy(aux[e], ptr, MIRATH_VAR_FF_AUX_BYTES);
+        ptr += MIRATH_VAR_FF_AUX_BYTES;
 
         memcpy(mid_alpha[e], ptr, sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
         ptr += sizeof(ff_mu_t) * MIRATH_PARAM_RHO;

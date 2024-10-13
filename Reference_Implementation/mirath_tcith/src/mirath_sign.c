@@ -18,10 +18,10 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
 
     ff_t *S;
     ff_t *C;
-    ff_t SC[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R) + mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)];
-    ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)];
+    ff_t SC[MIRATH_VAR_FF_S_BYTES + MIRATH_VAR_FF_C_BYTES];
+    ff_t H[MIRATH_VAR_FF_H_BYTES];
 
-    ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
+    ff_t y[MIRATH_VAR_FF_Y_BYTES];
 
     // step 1
     randombytes(seed_sk, MIRATH_SECURITY_BYTES);
@@ -30,9 +30,9 @@ int mirath_keypair(uint8_t *pk, uint8_t *sk) {
 
     // step 3
     mirath_prng_init(&prng, NULL, seed_sk, MIRATH_SECURITY_BYTES);
-    mirath_prng(&prng, SC, mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R) + mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R));
+    mirath_prng(&prng, SC, MIRATH_VAR_FF_S_BYTES + MIRATH_VAR_FF_C_BYTES);
     S = SC;
-    C = SC + mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R);
+    C = SC + MIRATH_VAR_FF_S_BYTES;
     mirath_matrix_set_to_ff(S, MIRATH_PARAM_M, MIRATH_PARAM_R);
     mirath_matrix_set_to_ff(C, MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R);
 
@@ -74,19 +74,19 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
 
     mirath_prng_t prng;
 
-    ff_t S[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M, MIRATH_PARAM_R)];
-    ff_t C[mirath_matrix_ff_bytes_size(MIRATH_PARAM_R, MIRATH_PARAM_N - MIRATH_PARAM_R)];
-    ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)];
+    ff_t S[MIRATH_VAR_FF_S_BYTES];
+    ff_t C[MIRATH_VAR_FF_C_BYTES];
+    ff_t H[MIRATH_VAR_FF_H_BYTES];
 
     uint8_t pk[MIRATH_PUBLIC_KEY_BYTES];
 
-    ff_mu_t gamma[MIRATH_PARAM_RHO * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)];
+    ff_mu_t gamma[MIRATH_VAR_GAMMA];
     ff_mu_t v[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO];
-    ff_mu_t rnd_S[MIRATH_PARAM_TAU][MIRATH_PARAM_M * MIRATH_PARAM_R];
-    ff_mu_t rnd_C[MIRATH_PARAM_TAU][MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R)];
+    ff_mu_t rnd_S[MIRATH_PARAM_TAU][MIRATH_VAR_S];
+    ff_mu_t rnd_C[MIRATH_PARAM_TAU][MIRATH_VAR_C];
     ff_mu_t rnd_v[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO];
 
-    ff_t aux[MIRATH_PARAM_TAU][mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1)];
+    ff_t aux[MIRATH_PARAM_TAU][MIRATH_VAR_FF_AUX_BYTES];
     ff_mu_t mid_alpha[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO];
 
     // Phase 0: Initialization
@@ -131,10 +131,8 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
 
     hash_update(hash_ctx, h_com, 2 * MIRATH_SECURITY_BYTES);
 
-    const uint32_t aux_n_bytes = mirath_matrix_ff_bytes_size(
-            MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1);
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
-        hash_update(hash_ctx, aux[e], aux_n_bytes);
+        hash_update(hash_ctx, aux[e], MIRATH_VAR_FF_AUX_BYTES);
     }
 
     // Phase 2: First challenge (MPC challenge)
@@ -143,7 +141,7 @@ int mirath_sign(uint8_t *sig_msg, uint8_t *msg, size_t msg_len, uint8_t *sk) {
 
     // step 9
     mirath_prng_init(&prng, hash1, NULL, 0);
-    mirath_prng(&prng, gamma, sizeof(ff_mu_t) * (MIRATH_PARAM_RHO * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)));
+    mirath_prng(&prng, gamma, sizeof(ff_mu_t) * MIRATH_VAR_GAMMA);
 
     domain_separator = DOMAIN_SEPARATOR_HASH2_PARTIAL;
 
@@ -229,14 +227,14 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
 
     uint8_t domain_separator;
 
-    ff_mu_t share_S[MIRATH_PARAM_TAU][MIRATH_PARAM_M * MIRATH_PARAM_R];
-    ff_mu_t share_C[MIRATH_PARAM_TAU][MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R)];
+    ff_mu_t share_S[MIRATH_PARAM_TAU][MIRATH_VAR_S];
+    ff_mu_t share_C[MIRATH_PARAM_TAU][MIRATH_VAR_C];
     ff_mu_t share_v[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO];
-    ff_mu_t gamma[MIRATH_PARAM_RHO * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)];
-    ff_t H[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, MIRATH_PARAM_K)];
-    ff_t y[mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K, 1)];
+    ff_mu_t gamma[MIRATH_VAR_GAMMA];
+    ff_t H[MIRATH_VAR_FF_H_BYTES];
+    ff_t y[MIRATH_VAR_FF_Y_BYTES];
 
-    ff_t aux[MIRATH_PARAM_TAU][mirath_matrix_ff_bytes_size(MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1)];
+    ff_t aux[MIRATH_PARAM_TAU][MIRATH_VAR_FF_AUX_BYTES];
     ff_mu_t mid_alpha[MIRATH_PARAM_TAU][MIRATH_PARAM_RHO];
 
     mirath_tcith_commit_t commits_i_star[MIRATH_PARAM_TAU];
@@ -291,8 +289,8 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
         const uint16_t N = e < MIRATH_PARAM_TAU_1 ? MIRATH_PARAM_N_1 : MIRATH_PARAM_N_2;
 
-        memset(share_S[e], 0, sizeof(ff_mu_t) * MIRATH_PARAM_M * MIRATH_PARAM_R);
-        memset(share_C[e], 0, sizeof(ff_mu_t) * MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R));
+        memset(share_S[e], 0, sizeof(ff_mu_t) * MIRATH_VAR_S);
+        memset(share_C[e], 0, sizeof(ff_mu_t) * MIRATH_VAR_C);
         memset(share_v[e], 0, sizeof(ff_mu_t) * MIRATH_PARAM_RHO);
 
         compute_share(share_S[e], share_C[e], share_v[e], commits, i_star[e], seeds, e, salt, commits_i_star, aux[e]);
@@ -304,10 +302,8 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
 
     hash_update(hash_ctx, h_com, 2 * MIRATH_SECURITY_BYTES);
 
-    const uint32_t aux_n_bytes = mirath_matrix_ff_bytes_size(
-            MIRATH_PARAM_M * MIRATH_PARAM_R + MIRATH_PARAM_R * (MIRATH_PARAM_N - MIRATH_PARAM_R), 1);
     for (uint32_t e = 0; e < MIRATH_PARAM_TAU; e++) {
-        hash_update(hash_ctx, aux[e], aux_n_bytes);
+        hash_update(hash_ctx, aux[e], MIRATH_VAR_FF_AUX_BYTES);
     }
 
     // step 8
@@ -315,7 +311,7 @@ int mirath_verify(uint8_t *msg, size_t *msg_len, uint8_t *sig_msg, uint8_t *pk) 
 
     // step 9
     mirath_prng_init(&prng, hash1, NULL, 0);
-    mirath_prng(&prng, gamma, sizeof(ff_mu_t) * (MIRATH_PARAM_RHO * (MIRATH_PARAM_M * MIRATH_PARAM_N - MIRATH_PARAM_K)));
+    mirath_prng(&prng, gamma, sizeof(ff_mu_t) * MIRATH_VAR_GAMMA);
 
     // Phase 2: MPC simulation
     // step 10 and 11
